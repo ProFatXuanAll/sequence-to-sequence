@@ -5,6 +5,7 @@ Usages:
     import s2s.path
 
     data_path = s2s.path.DATA_PATH
+    exp_path = s2s.path.EXP_PATH
 """
 
 # built-in modules
@@ -19,4 +20,8 @@ PROJECT_ROOT = os.path.abspath(os.path.join(
 DATA_PATH = os.path.join(
     PROJECT_ROOT,
     'data'
+)
+EXP_PATH = os.path.join(
+    PROJECT_ROOT,
+    'exp'
 )

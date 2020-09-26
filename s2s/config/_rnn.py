@@ -7,6 +7,7 @@ class RNNEncCfg:
             d_hid: int,
             dropout: float,
             is_bidir: bool,
+            is_cased: bool,
             n_layer: int,
             n_vocab: int,
             pad_id: int,
@@ -15,6 +16,7 @@ class RNNEncCfg:
         self.d_hid = d_hid
         self.dropout = dropout
         self.is_bidir = is_bidir
+        self.is_cased = is_cased
         self.n_layer = n_layer
         self.n_vocab = n_vocab
         self.pad_id = pad_id
@@ -27,6 +29,7 @@ class RNNDecCfg:
             d_enc_hid: int,
             d_hid: int,
             dropout: float,
+            is_cased: bool,
             n_layer: int,
             n_vocab: int,
             pad_id: int,
@@ -35,6 +38,7 @@ class RNNDecCfg:
         self.d_enc_hid = d_enc_hid
         self.d_hid = d_hid
         self.dropout = dropout
+        self.is_cased = is_cased
         self.n_layer = n_layer
         self.n_vocab = n_vocab
         self.pad_id = pad_id
@@ -64,6 +68,7 @@ class RNNCfg:
             d_enc_hid=enc_d_hid * (enc_is_bidir + 1),
             d_hid=dec_d_hid,
             dropout=dec_dropout,
+            is_cased=dec_is_cased,
             n_layer=dec_n_layer,
             n_vocab=dec_n_vocab,
             pad_id=dec_pad_id,
@@ -73,6 +78,7 @@ class RNNCfg:
             d_hid=enc_d_hid,
             dropout=enc_dropout,
             is_bidir=enc_is_bidir,
+            is_cased=enc_is_cased,
             n_layer=enc_n_layer,
             n_vocab=enc_n_vocab,
             pad_id=enc_pad_id,
