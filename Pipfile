@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = ">=2.6.0"
+autopep8 = ">=1.5.4"
+
+[packages]
+torch = "1.6.0"
+pandas = "1.1.2"
+numpy = "1.19.2"
+tqdm = "4.49.0"
+sklearn = "0.0"
+
+[requires]
+python_version = "3.8"
