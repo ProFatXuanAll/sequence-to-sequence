@@ -26,12 +26,12 @@ class GRUEncCfg(BaseEncCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace):
+    def parse_args(cls, args: argparse.Namespace) -> 'GRUEncCfg':
         return GRUEncCfg(
             d_emb=args.enc_d_emb,
             d_hid=args.enc_d_hid,
             dropout=args.enc_dropout,
-            is_bidir=args.enc_is_bidir,
+            is_bidir=args.is_bidir,
             is_cased=args.enc_is_cased,
             n_layer=args.enc_n_layer,
             n_vocab=args.enc_n_vocab,
@@ -60,10 +60,10 @@ class GRUDecCfg(BaseDecCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace):
+    def parse_args(cls, args: argparse.Namespace) -> 'GRUDecCfg':
         return GRUDecCfg(
             d_emb=args.dec_d_emb,
-            d_enc_hid=args.enc_d_hid * (args.enc_is_bidir + 1),
+            d_enc_hid=args.enc_d_hid * (args.is_bidir + 1),
             d_hid=args.dec_d_hid,
             dropout=args.dec_dropout,
             is_cased=args.dec_is_cased,
@@ -94,7 +94,7 @@ class GRUCfg(BaseCfg):
         )
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace):
+    def parse_args(cls, args: argparse.Namespace) -> 'GRUCfg':
         return GRUCfg(
             ckpt_step=args.ckpt_step,
             dec_cfg=GRUDecCfg.parse_args(args=args),

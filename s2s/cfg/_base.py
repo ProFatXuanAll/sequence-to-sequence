@@ -46,12 +46,12 @@ class CfgMixin(abc.ABC):
         raise NotImplementedError
 
     @classmethod
-    def peek_cfg_value(cls, exp_name: str, file_name: str, key: str) -> Union[
-        bool,
-        float,
-        int,
-        str,
-    ]:
+    def peek_cfg_value(
+        cls,
+        exp_name: str,
+        file_name: str,
+        key: str
+    ) -> Union[bool, float, int, str]:
         file_path = os.path.join(s2s.path.EXP_PATH, exp_name, file_name)
 
         if not os.path.exists(file_path):
@@ -83,6 +83,10 @@ class BaseEncCfg(CfgMixin):
             key=key
         )
 
+    @classmethod
+    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+        raise NotImplementedError
+
 class BaseDecCfg(CfgMixin):
     def save(self, exp_name: str) -> None:
         super().save(exp_name=exp_name, file_name='dec_cfg.json')
@@ -92,17 +96,20 @@ class BaseDecCfg(CfgMixin):
         return super().load(exp_name=exp_name, file_name='dec_cfg.json')
 
     @classmethod
-    def peek_cfg_value(cls, exp_name: str, key: str) -> Union[
-        bool,
-        float,
-        int,
-        str,
-    ]:
+    def peek_cfg_value(
+            cls,
+            exp_name: str,
+            key: str
+    ) -> Union[bool, float, int, str]:
         return super().peek_cfg_value(
             exp_name=exp_name,
             file_name='dec_cfg.json',
             key=key
         )
+
+    @classmethod
+    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+        raise NotImplementedError
 
 class BaseCfg(CfgMixin):
     dec_cfg_cstr = BaseDecCfg
@@ -139,14 +146,44 @@ class BaseCfg(CfgMixin):
         )
 
     @classmethod
-    def peek_cfg_value(cls, exp_name: str, key: str) -> Union[
-        bool,
-        float,
-        int,
-        str,
-    ]:
+    def peek_cfg_value(
+            cls,
+            exp_name: str,
+            key: str
+    ) -> Union[bool, float, int, str]:
         return super().peek_cfg_value(
             exp_name=exp_name,
             file_name='exp_cfg.json',
             key=key
         )
+
+    @classmethod
+    def get_arg_parser(cls) -> argparse.ArgumentParser:
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            '--ckpt_step',
+            help='Checkpoint save interval.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--exp_name',
+            help='Current experiment name.',
+            required=True,
+            type=str,
+        )
+        parser.add_argument(
+            '--log_step',
+            help='Performance log interval.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--model_name',
+            help='Sequence to sequence model name.',
+            required=True,
+            type=str,
+        )
+        cls.enc_cfg_cstr.update_arg_parser(parser=parser)
+        cls.dec_cfg_cstr.update_arg_parser(parser=parser)
+        return parser

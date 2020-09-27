@@ -26,17 +26,67 @@ class RNNEncCfg(BaseEncCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace):
+    def parse_args(cls, args: argparse.Namespace) -> 'RNNEncCfg':
         return cls(
             d_emb=args.enc_d_emb,
             d_hid=args.enc_d_hid,
             dropout=args.enc_dropout,
-            is_bidir=args.enc_is_bidir,
+            is_bidir=args.is_bidir,
             is_cased=args.enc_is_cased,
             n_layer=args.enc_n_layer,
             n_vocab=args.enc_n_vocab,
             pad_id=args.enc_pad_id,
         )
+
+    @classmethod
+    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            '--enc_d_emb',
+            help='Encoder embedding dimension.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--enc_d_hid',
+            help='Encoder hidden dimension.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--enc_dropout',
+            help='Encoder dropout rate.',
+            required=True,
+            type=float,
+        )
+        parser.add_argument(
+            '--enc_is_cased',
+            help='Whether to use case sensitive RNN encoder.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '--is_bidir',
+            help='Whether to use bidirectional RNN encoder or not.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '--enc_n_layer',
+            help='Number of encoder RNN layer(s).',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--enc_n_vocab',
+            help='Encoder vocabulary size.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--enc_pad_id',
+            help='Encoder padding token id.',
+            required=True,
+            type=int,
+        )
+
 
 class RNNDecCfg(BaseDecCfg):
     def __init__(
@@ -60,16 +110,61 @@ class RNNDecCfg(BaseDecCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace):
+    def parse_args(cls, args: argparse.Namespace) -> 'RNNDecCfg':
         return cls(
             d_emb=args.dec_d_emb,
-            d_enc_hid=args.enc_d_hid * (args.enc_is_bidir + 1),
+            d_enc_hid=args.enc_d_hid * (args.is_bidir + 1),
             d_hid=args.dec_d_hid,
             dropout=args.dec_dropout,
             is_cased=args.dec_is_cased,
             n_layer=args.dec_n_layer,
             n_vocab=args.dec_n_vocab,
             pad_id=args.dec_pad_id,
+        )
+
+
+    @classmethod
+    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            '--dec_d_emb',
+            help='Decoder embedding dimension.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--dec_d_hid',
+            help='Decoder hidden dimension.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--dec_dropout',
+            help='Decoder dropout rate.',
+            required=True,
+            type=float,
+        )
+        parser.add_argument(
+            '--dec_is_cased',
+            help='Whether to use case sensitive RNN decoder.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '--dec_n_layer',
+            help='Number of decoder RNN layer(s).',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--dec_n_vocab',
+            help='Decoder vocabulary size.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--dec_pad_id',
+            help='Decoder padding token id.',
+            required=True,
+            type=int,
         )
 
 class RNNCfg(BaseCfg):
@@ -94,7 +189,7 @@ class RNNCfg(BaseCfg):
         )
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace):
+    def parse_args(cls, args: argparse.Namespace) -> 'RNNCfg':
         return cls(
             ckpt_step=args.ckpt_step,
             dec_cfg=RNNDecCfg.parse_args(args=args),
@@ -102,3 +197,8 @@ class RNNCfg(BaseCfg):
             exp_name=args.exp_name,
             log_step=args.log_step,
         )
+
+    @classmethod
+    def get_arg_parser(cls) -> argparse.ArgumentParser:
+        parser = super().get_arg_parser()
+        return parser
