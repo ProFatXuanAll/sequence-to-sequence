@@ -124,7 +124,7 @@ class BaseCfg(CfgMixin):
         self.log_step = log_step
         self.model_name = model_name
 
-    def save(self):
+    def save(self) -> None:
         super().save(exp_name=self.exp_name, file_name='exp_cfg.json')
         self.enc_cfg.save(exp_name=self.exp_name)
         self.dec_cfg.save(exp_name=self.exp_name)

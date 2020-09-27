@@ -27,7 +27,7 @@ class RNNEncCfg(BaseEncCfg):
 
     @classmethod
     def parse_args(cls, args: argparse.Namespace):
-        return RNNEncCfg(
+        return cls(
             d_emb=args.enc_d_emb,
             d_hid=args.enc_d_hid,
             dropout=args.enc_dropout,
@@ -61,7 +61,7 @@ class RNNDecCfg(BaseDecCfg):
 
     @classmethod
     def parse_args(cls, args: argparse.Namespace):
-        return RNNDecCfg(
+        return cls(
             d_emb=args.dec_d_emb,
             d_enc_hid=args.enc_d_hid * (args.enc_is_bidir + 1),
             d_hid=args.dec_d_hid,
@@ -95,7 +95,7 @@ class RNNCfg(BaseCfg):
 
     @classmethod
     def parse_args(cls, args: argparse.Namespace):
-        return RNNCfg(
+        return cls(
             ckpt_step=args.ckpt_step,
             dec_cfg=RNNDecCfg.parse_args(args=args),
             enc_cfg=RNNEncCfg.parse_args(args=args),

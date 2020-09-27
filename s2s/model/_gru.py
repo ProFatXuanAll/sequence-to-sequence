@@ -2,10 +2,10 @@ from typing import Sequence
 
 import torch
 
-from s2s.cfg import RNNCfg, RNNEncCfg, RNNDecCfg
+from s2s.cfg import GRUCfg, GRUEncCfg, GRUDecCfg
 
-class RNNEncModel(torch.nn.Module):
-    def __init__(self, cfg: RNNEncCfg):
+class GRUEncModel(torch.nn.Module):
+    def __init__(self, cfg: GRUEncCfg):
         super().__init__()
         self.emb = torch.nn.Embedding(
             num_embeddings=cfg.n_vocab,
@@ -21,7 +21,7 @@ class RNNEncModel(torch.nn.Module):
             torch.nn.ReLU(),
             torch.nn.Dropout(p=cfg.dropout),
         )
-        self.hid = torch.nn.RNN(
+        self.hid = torch.nn.GRU(
             input_size=cfg.d_hid,
             hidden_size=cfg.d_hid,
             num_layers=cfg.n_layer,
@@ -49,8 +49,8 @@ class RNNEncModel(torch.nn.Module):
         return out[torch.arange(out.size(0)).to(out.device), src_len]
 
 
-class RNNDecModel(torch.nn.Module):
-    def __init__(self, cfg: RNNDecCfg):
+class GRUDecModel(torch.nn.Module):
+    def __init__(self, cfg: GRUDecCfg):
         super().__init__()
         self.emb = torch.nn.Embedding(
             num_embeddings=cfg.n_vocab,
@@ -75,7 +75,7 @@ class RNNDecModel(torch.nn.Module):
             torch.nn.ReLU(),
             torch.nn.Dropout(p=cfg.dropout),
         )
-        self.hid = torch.nn.RNN(
+        self.hid = torch.nn.GRU(
             input_size=cfg.d_hid,
             hidden_size=cfg.d_hid,
             num_layers=cfg.n_layer,
@@ -112,11 +112,11 @@ class RNNDecModel(torch.nn.Module):
         return self.hid_to_emb(out)
 
 
-class RNNModel(torch.nn.Module):
-    def __init__(self, cfg: RNNCfg):
+class GRUModel(torch.nn.Module):
+    def __init__(self, cfg: GRUCfg):
         super().__init__()
-        self.enc = RNNEncModel(cfg=cfg.enc_cfg)
-        self.dec = RNNDecModel(cfg=cfg.dec_cfg)
+        self.enc = GRUEncModel(cfg=cfg.enc_cfg)
+        self.dec = GRUDecModel(cfg=cfg.dec_cfg)
 
     def forward(
             self,

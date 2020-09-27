@@ -1,10 +1,11 @@
 import argparse
 
 from typing import Dict
+from typing import Type
 
 import s2s.cfg
 
-_CFG_MAP: Dict[str, s2s.cfg.BaseCfg] = {
+_CFG_MAP: Dict[str, Type[s2s.cfg.BaseCfg]] = {
     'gru': s2s.cfg.GRUCfg,
     'rnn': s2s.cfg.RNNCfg,
 }
