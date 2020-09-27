@@ -1,6 +1,6 @@
 import torch
 
-from s2s.config import RNNCfg, RNNEncCfg, RNNDecCfg
+from s2s.cfg import RNNCfg, RNNEncCfg, RNNDecCfg
 
 class RNNEncModel(torch.nn.Module):
     def __init__(self, cfg: RNNEncCfg):
