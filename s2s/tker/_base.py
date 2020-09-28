@@ -5,25 +5,18 @@ import unicodedata
 from typing import List
 from typing import Sequence
 
-class BaseTker(abc.ABC):
+from s2s.cfg import BaseTkerCfg
 
-    def __init__(
-            self,
-            is_cased: bool,
-            min_count: int,
-            n_vocab: int,
-            bos_tk: str='[bos]',
-            eos_tk: str='[eos]',
-            pad_tk: str='[pad]',
-            unk_tk: str='[unk]',
-    ):
-        self.is_cased = is_cased
-        self.min_count = min_count
-        self.n_vocab = n_vocab
-        self.bos_tk = self.preprocess(bos_tk)
-        self.eos_tk = self.preprocess(eos_tk)
-        self.pad_tk = self.preprocess(pad_tk)
-        self.unk_tk = self.preprocess(unk_tk)
+
+class BaseTker(abc.ABC):
+    def __init__(self, cfg: BaseTker):
+        self.is_cased = cfg.is_cased
+        self.min_count = cfg.min_count
+        self.n_vocab = cfg.n_vocab
+        self.bos_tk = self.preprocess(cfg.bos_tk)
+        self.eos_tk = self.preprocess(cfg.eos_tk)
+        self.pad_tk = self.preprocess(cfg.pad_tk)
+        self.unk_tk = self.preprocess(cfg.unk_tk)
         self.tk2id = {}
         self.id2tk = {}
 

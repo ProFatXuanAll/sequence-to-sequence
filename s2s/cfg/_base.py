@@ -5,63 +5,35 @@ import argparse
 import json
 import os
 
-from typing import Union
-
 import s2s.path
 
 
 class CfgMixin(abc.ABC):
-    def __iter__(self):
-        for key, value in self.__dict__.items():
-            yield key, value
+    file_name = 'cfg.json'
 
-    def save(self, exp_name: str, file_name: str) -> None:
-        cfg = {
-            k: v for k, v in iter(self)
-            if isinstance(v, (bool, float, int, str))
-        }
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            self.__dict__[key] = value
+
+    def save(self, exp_name: str) -> None:
         exp_path = os.path.join(s2s.path.EXP_PATH, exp_name)
-        file_path = os.path.join(exp_path, file_name)
+        file_path = os.path.join(exp_path, self.__class__.file_name)
 
         if not os.path.exists(exp_path):
             os.makedirs(exp_path)
 
         with open(file_path, 'w', encoding='utf-8') as cfg_file:
-            json.dump(cfg, cfg_file, ensure_ascii=False, indent=2)
+            json.dump(self.__dict__, cfg_file, ensure_ascii=False, indent=2)
 
     @classmethod
-    def load(cls, exp_name: str, file_name: str, **kwargs) -> 'CfgMixin':
-        file_path = os.path.join(s2s.path.EXP_PATH, exp_name, file_name)
+    def load(cls, exp_name: str) -> 'CfgMixin':
+        file_path = os.path.join(s2s.path.EXP_PATH, exp_name, cls.file_name)
 
         if not os.path.exists(file_path):
             raise FileNotFoundError(f'{file_path} does not exist.')
 
         with open(file_path, 'r', encoding='utf-8') as cfg_file:
-            cfg = json.load(cfg_file)
-
-        return cls(**cfg, **kwargs)
-
-    @classmethod
-    def peek_cfg_value(
-        cls,
-        exp_name: str,
-        file_name: str,
-        key: str
-    ) -> Union[bool, float, int, str]:
-        file_path = os.path.join(s2s.path.EXP_PATH, exp_name, file_name)
-
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f'{file_path} does not exist.')
-
-        with open(file_path, 'r', encoding='utf-8') as cfg_file:
-            cfg = json.load(cfg_file)
-
-        return cfg[key]
-
-    @classmethod
-    @abc.abstractmethod
-    def load_from_args(cls, args: argparse.Namespace) -> 'CfgMixin':
-        raise NotImplementedError
+            return cls(**json.load(cfg_file))
 
     @classmethod
     @abc.abstractmethod
@@ -69,120 +41,80 @@ class CfgMixin(abc.ABC):
         raise NotImplementedError
 
 
-class BaseEncCfg(CfgMixin):
-    def save(self, exp_name: str) -> None:
-        super().save(exp_name=exp_name, file_name='enc_cfg.json')
-
-    @classmethod
-    def load(cls, exp_name: str) -> 'BaseEncCfg':
-        return super().load(exp_name=exp_name, file_name='enc_cfg.json')
-
-    @classmethod
-    def peek_cfg_value(
-            cls,
-            exp_name: str,
-            key: str
-    ) -> Union[bool, float, int, str]:
-        return super().peek_cfg_value(
-            exp_name=exp_name,
-            file_name='enc_cfg.json',
-            key=key
-        )
-
-
-class BaseDecCfg(CfgMixin):
-    def save(self, exp_name: str) -> None:
-        super().save(exp_name=exp_name, file_name='dec_cfg.json')
-
-    @classmethod
-    def load(cls, exp_name: str) -> 'BaseDecCfg':
-        return super().load(exp_name=exp_name, file_name='dec_cfg.json')
-
-    @classmethod
-    def peek_cfg_value(
-            cls,
-            exp_name: str,
-            key: str
-    ) -> Union[bool, float, int, str]:
-        return super().peek_cfg_value(
-            exp_name=exp_name,
-            file_name='dec_cfg.json',
-            key=key
-        )
-
-
-class BaseCfg(CfgMixin):
-    dec_cfg_cstr = BaseDecCfg
-    enc_cfg_cstr = BaseEncCfg
-
-    def __init__(
-            self,
-            ckpt_step: int,
-            dec_cfg: BaseDecCfg,
-            enc_cfg: BaseEncCfg,
-            exp_name: str,
-            log_step: int,
-            model_name: str,
-    ):
-        self.ckpt_step = ckpt_step
-        self.dec_cfg = dec_cfg
-        self.enc_cfg = enc_cfg
-        self.exp_name = exp_name
-        self.log_step = log_step
-        self.model_name = model_name
-
-    def save(self) -> None:
-        super().save(exp_name=self.exp_name, file_name='exp_cfg.json')
-        self.enc_cfg.save(exp_name=self.exp_name)
-        self.dec_cfg.save(exp_name=self.exp_name)
-
-    @classmethod
-    def load(cls, exp_name: str) -> 'BaseCfg':
-        return super().load(
-            exp_name=exp_name,
-            file_name='exp_cfg.json',
-            enc_cfg=cls.enc_cfg_cstr.load(exp_name=exp_name),
-            dec_cfg=cls.dec_cfg_cstr.load(exp_name=exp_name),
-        )
-
-    @classmethod
-    def peek_cfg_value(
-            cls,
-            exp_name: str,
-            key: str
-    ) -> Union[bool, float, int, str]:
-        return super().peek_cfg_value(
-            exp_name=exp_name,
-            file_name='exp_cfg.json',
-            key=key
-        )
+class BaseExpCfg(CfgMixin):
+    file_name = 'exp_cfg.json'
 
     @classmethod
     def update_parser(cls, parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            '--ckpt',
-            default=0,
-            help='Start from specific checkpoint.',
-            type=int,
-        )
-        parser.add_argument(
-            '--ckpt_step',
-            help='Checkpoint save interval.',
-            required=True,
-            type=int,
-        )
         parser.add_argument(
             '--exp_name',
             help='Current experiment name.',
             required=True,
             type=str,
         )
+
+
+class BaseModelCfg(CfgMixin):
+    file_name = 'model_cfg.json'
+    model_name = 'Base'
+
+
+class BaseOptimCfg(CfgMixin):
+    file_name = 'optim_cfg.json'
+
+    @classmethod
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
-            '--log_step',
-            help='Performance log interval.',
+            '--lr',
+            help='',
+            required=True,
+            type=float,
+        )
+
+
+class BaseTkerCfg(CfgMixin):
+    file_name = 'tker_cfg.json'
+
+    @classmethod
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            '--min_count',
+            help='',
             required=True,
             type=int,
         )
-
-        cls.enc_cfg_cstr.update_parser(parser=parser)
-        cls.dec_cfg_cstr.update_parser(parser=parser)
+        parser.add_argument(
+            '--n_vocab',
+            help='',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--is_cased',
+            action='store_true',
+            help='',
+        )
+        parser.add_argument(
+            '--bos_tk',
+            help='',
+            default='[bos]',
+            type=str,
+        )
+        parser.add_argument(
+            '--eos_tk',
+            help='',
+            default='[eos]',
+            type=str,
+        )
+        parser.add_argument(
+            '--pad_tk',
+            help='',
+            default='[pad]',
+            type=str,
+        )
+        parser.add_argument(
+            '--unk_tk',
+            help='',
+            default='[unk]',
+            type=str,
+        )

@@ -1,29 +1,43 @@
-from typing import Sequence
-
 import torch
 
-from s2s.cfg import RNNCfg, RNNEncCfg, RNNDecCfg
+from s2s.cfg import RNNCfg
 
 
 class RNNEncModel(torch.nn.Module):
-    def __init__(self, cfg: RNNEncCfg):
+    def __init__(self, cfg: RNNCfg):
         super().__init__()
-        self.emb = torch.nn.Embedding(cfg.n_vocab, cfg.d_emb, cfg.pad_id)
+        self.emb = torch.nn.Embedding(
+            num_embeddings=cfg.enc_n_vocab,
+            embedding_dim=cfg.enc_d_emb,
+            padding_idx=cfg.enc_pad_id,
+        )
         self.emb_to_hid = torch.nn.Sequential(
-            torch.nn.Dropout(cfg.dropout),
-            torch.nn.Linear(cfg.d_emb, cfg.d_hid),
+            torch.nn.Dropout(
+                p=cfg.enc_dropout,
+            ),
+            torch.nn.Linear(
+                in_features=cfg.enc_d_emb,
+                out_features=cfg.enc_d_hid,
+            ),
             torch.nn.ReLU(),
-            torch.nn.Dropout(cfg.dropout),
-            torch.nn.Linear(cfg.d_hid, cfg.d_hid),
+            torch.nn.Dropout(
+                p=cfg.enc_dropout,
+            ),
+            torch.nn.Linear(
+                in_features=cfg.enc_d_hid,
+                out_features=cfg.enc_d_hid,
+            ),
             torch.nn.ReLU(),
-            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Dropout(
+                p=cfg.enc_dropout,
+            ),
         )
         self.hid = torch.nn.RNN(
-            input_size=cfg.d_hid,
-            hidden_size=cfg.d_hid,
-            num_layers=cfg.n_layer,
+            input_size=cfg.enc_d_hid,
+            hidden_size=cfg.enc_d_hid,
+            num_layers=cfg.enc_n_layer,
             batch_first=True,
-            dropout=cfg.dropout * min(1, cfg.n_layer - 1),
+            dropout=cfg.enc_dropout * min(1, cfg.enc_n_layer - 1),
             bidirectional=cfg.is_bidir,
         )
 
@@ -45,42 +59,82 @@ class RNNEncModel(torch.nn.Module):
         # shape: (B, H * (is_bidir + 1))
         return out[torch.arange(out.size(0)).to(out.device), src_len]
 
+    def _forward_unimplemented(self):
+        pass
 
 class RNNDecModel(torch.nn.Module):
-    def __init__(self, cfg: RNNDecCfg):
+    def __init__(self, cfg: RNNCfg):
         super().__init__()
-        self.emb = torch.nn.Embedding(cfg.n_vocab, cfg.d_emb, cfg.pad_id)
+        self.emb = torch.nn.Embedding(
+            num_embeddings=cfg.dec_n_vocab,
+            embedding_dim=cfg.dec_d_emb,
+            padding_idx=cfg.dec_pad_id,
+        )
         self.emb_to_hid = torch.nn.Sequential(
-            torch.nn.Dropout(cfg.dropout),
-            torch.nn.Linear(cfg.d_emb, cfg.d_hid),
+            torch.nn.Dropout(
+                p=cfg.dec_dropout,
+            ),
+            torch.nn.Linear(
+                in_features=cfg.dec_d_emb,
+                out_features=cfg.dec_d_hid,
+            ),
             torch.nn.ReLU(),
-            torch.nn.Dropout(cfg.dropout),
-            torch.nn.Linear(cfg.d_hid, cfg.d_hid),
+            torch.nn.Dropout(
+                p=cfg.dec_dropout,
+            ),
+            torch.nn.Linear(
+                in_features=cfg.dec_d_hid,
+                out_features=cfg.dec_d_hid,
+            ),
             torch.nn.ReLU(),
-            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Dropout(
+                p=cfg.dec_dropout,
+            ),
         )
         self.enc_to_hid = torch.nn.Sequential(
-            torch.nn.Dropout(cfg.dropout),
-            torch.nn.Linear(cfg.d_enc_hid, cfg.d_hid * cfg.n_layer),
+            torch.nn.Dropout(
+                p=cfg.dec_dropout,
+            ),
+            torch.nn.Linear(
+                in_features=cfg.enc_d_hid,
+                out_features=cfg.dec_d_hid * cfg.dec_n_layer,
+            ),
             torch.nn.ReLU(),
-            torch.nn.Dropout(cfg.dropout),
-            torch.nn.Linear(cfg.d_hid * cfg.n_layer, cfg.d_hid * cfg.n_layer),
+            torch.nn.Dropout(
+                p=cfg.dec_dropout,
+            ),
+            torch.nn.Linear(
+                in_features=cfg.dec_d_hid * cfg.dec_n_layer,
+                out_features=cfg.dec_d_hid * cfg.dec_n_layer,
+            ),
             torch.nn.ReLU(),
-            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Dropout(
+                p=cfg.dec_dropout,
+            ),
         )
         self.hid = torch.nn.RNN(
-            input_size=cfg.d_hid,
-            hidden_size=cfg.d_hid,
-            num_layers=cfg.n_layer,
+            input_size=cfg.dec_d_hid,
+            hidden_size=cfg.dec_d_hid,
+            num_layers=cfg.dec_n_layer,
             batch_first=True,
-            dropout=cfg.dropout * min(1, cfg.n_layer - 1),
+            dropout=cfg.dec_dropout * min(1, cfg.dec_n_layer - 1),
         )
         self.hid_to_emb = torch.nn.Sequential(
-            torch.nn.Dropout(cfg.dropout),
-            torch.nn.Linear(cfg.d_hid, cfg.d_emb),
+            torch.nn.Dropout(
+                p=cfg.dec_dropout,
+            ),
+            torch.nn.Linear(
+                in_features=cfg.dec_d_hid,
+                out_features=cfg.dec_d_emb,
+            ),
             torch.nn.ReLU(),
-            torch.nn.Dropout(cfg.dropout),
-            torch.nn.Linear(cfg.d_emb, cfg.d_emb),
+            torch.nn.Dropout(
+                p=cfg.dec_dropout,
+            ),
+            torch.nn.Linear(
+                in_features=cfg.dec_d_emb,
+                out_features=cfg.dec_d_emb
+            ),
         )
 
     def forward(
@@ -104,12 +158,14 @@ class RNNDecModel(torch.nn.Module):
         # shape: (B, S, E)
         return self.hid_to_emb(out)
 
+    def _forward_unimplemented(self):
+        pass
 
 class RNNModel(torch.nn.Module):
     def __init__(self, cfg: RNNCfg):
         super().__init__()
-        self.enc = RNNEncModel(cfg=cfg.enc_cfg)
-        self.dec = RNNDecModel(cfg=cfg.dec_cfg)
+        self.enc = RNNEncModel(cfg=cfg)
+        self.dec = RNNDecModel(cfg=cfg)
 
     def forward(
             self,
@@ -118,7 +174,10 @@ class RNNModel(torch.nn.Module):
             tgt: torch.Tensor,
     ) -> torch.Tensor:
         # shape: (B, S, E)
-        return self.dec(self.enc(src), tgt)
+        return self.dec(self.enc(src=src, src_len=src_len), tgt=tgt)
+
+    def _forward_unimplemented(self):
+        pass
 
     def predict(
             self,

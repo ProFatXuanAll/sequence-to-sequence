@@ -12,7 +12,7 @@ import s2s.path
 
 def load_model(
         args: argparse.Namespace,
-        cfg: s2s.cfg.BaseCfg
+        cfg: s2s.cfg.BaseModelCfg
 ) -> s2s.model.Model:
     model = s2s.model.MODEL_OPTS[cfg.model_name](cfg=cfg)
 

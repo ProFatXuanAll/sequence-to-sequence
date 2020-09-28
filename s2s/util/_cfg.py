@@ -7,13 +7,10 @@ from typing import Type
 import s2s.cfg
 
 
-def load_cfg(args: argparse.Namespace) -> s2s.cfg.BaseCfg:
+def load_model_cfg(args: argparse.Namespace) -> s2s.cfg.BaseModelCfg:
     if args.ckpt == 0:
-        return s2s.cfg.CFG_OPTS[args.model_name].load_from_args(args=args)
+        return s2s.cfg.MODEL_CFG_OPTS[args.model_name](**args.__dict__)
 
-    model_name = s2s.cfg.BaseCfg.peek_cfg_value(
-        exp_name=args.exp_name,
-        key='model_name',
-    )
+    model_name = s2s.cfg.BaseModelCfg(**args.__dict__).model_name
 
-    return s2s.cfg.CFG_OPTS[model_name].load(exp_name=args.exp_name)
+    return s2s.cfg.MODEL_CFG_OPTS[model_name].load(exp_name=args.exp_name)
