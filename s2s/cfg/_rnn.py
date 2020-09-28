@@ -26,7 +26,7 @@ class RNNEncCfg(BaseEncCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace) -> 'RNNEncCfg':
+    def from_args(cls, args: argparse.Namespace) -> 'RNNEncCfg':
         return cls(
             d_emb=args.enc_d_emb,
             d_hid=args.enc_d_hid,
@@ -110,7 +110,7 @@ class RNNDecCfg(BaseDecCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace) -> 'RNNDecCfg':
+    def from_args(cls, args: argparse.Namespace) -> 'RNNDecCfg':
         return cls(
             d_emb=args.dec_d_emb,
             d_enc_hid=args.enc_d_hid * (args.is_bidir + 1),
@@ -121,7 +121,6 @@ class RNNDecCfg(BaseDecCfg):
             n_vocab=args.dec_n_vocab,
             pad_id=args.dec_pad_id,
         )
-
 
     @classmethod
     def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
@@ -189,16 +188,11 @@ class RNNCfg(BaseCfg):
         )
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace) -> 'RNNCfg':
+    def from_args(cls, args: argparse.Namespace) -> 'RNNCfg':
         return cls(
             ckpt_step=args.ckpt_step,
-            dec_cfg=RNNDecCfg.parse_args(args=args),
-            enc_cfg=RNNEncCfg.parse_args(args=args),
+            dec_cfg=RNNDecCfg.from_args(args=args),
+            enc_cfg=RNNEncCfg.from_args(args=args),
             exp_name=args.exp_name,
             log_step=args.log_step,
         )
-
-    @classmethod
-    def get_arg_parser(cls) -> argparse.ArgumentParser:
-        parser = super().get_arg_parser()
-        return parser

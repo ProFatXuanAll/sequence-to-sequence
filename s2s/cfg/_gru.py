@@ -26,7 +26,7 @@ class GRUEncCfg(BaseEncCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace) -> 'GRUEncCfg':
+    def from_args(cls, args: argparse.Namespace) -> 'GRUEncCfg':
         return GRUEncCfg(
             d_emb=args.enc_d_emb,
             d_hid=args.enc_d_hid,
@@ -37,6 +37,56 @@ class GRUEncCfg(BaseEncCfg):
             n_vocab=args.enc_n_vocab,
             pad_id=args.enc_pad_id,
         )
+
+    @classmethod
+    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            '--enc_d_emb',
+            help='Encoder embedding dimension.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--enc_d_hid',
+            help='Encoder hidden dimension.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--enc_dropout',
+            help='Encoder dropout rate.',
+            required=True,
+            type=float,
+        )
+        parser.add_argument(
+            '--enc_is_cased',
+            help='Whether to use case sensitive GRU encoder.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '--is_bidir',
+            help='Whether to use bidirectional GRU encoder or not.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '--enc_n_layer',
+            help='Number of encoder GRU layer(s).',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--enc_n_vocab',
+            help='Encoder vocabulary size.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--enc_pad_id',
+            help='Encoder padding token id.',
+            required=True,
+            type=int,
+        )
+
 
 class GRUDecCfg(BaseDecCfg):
     def __init__(
@@ -60,7 +110,7 @@ class GRUDecCfg(BaseDecCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace) -> 'GRUDecCfg':
+    def from_args(cls, args: argparse.Namespace) -> 'GRUDecCfg':
         return GRUDecCfg(
             d_emb=args.dec_d_emb,
             d_enc_hid=args.enc_d_hid * (args.is_bidir + 1),
@@ -70,6 +120,50 @@ class GRUDecCfg(BaseDecCfg):
             n_layer=args.dec_n_layer,
             n_vocab=args.dec_n_vocab,
             pad_id=args.dec_pad_id,
+        )
+
+    @classmethod
+    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            '--dec_d_emb',
+            help='Decoder embedding dimension.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--dec_d_hid',
+            help='Decoder hidden dimension.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--dec_dropout',
+            help='Decoder dropout rate.',
+            required=True,
+            type=float,
+        )
+        parser.add_argument(
+            '--dec_is_cased',
+            help='Whether to use case sensitive GRU decoder.',
+            action='store_true',
+        )
+        parser.add_argument(
+            '--dec_n_layer',
+            help='Number of decoder GRU layer(s).',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--dec_n_vocab',
+            help='Decoder vocabulary size.',
+            required=True,
+            type=int,
+        )
+        parser.add_argument(
+            '--dec_pad_id',
+            help='Decoder padding token id.',
+            required=True,
+            type=int,
         )
 
 class GRUCfg(BaseCfg):
@@ -94,11 +188,11 @@ class GRUCfg(BaseCfg):
         )
 
     @classmethod
-    def parse_args(cls, args: argparse.Namespace) -> 'GRUCfg':
+    def from_args(cls, args: argparse.Namespace) -> 'GRUCfg':
         return GRUCfg(
             ckpt_step=args.ckpt_step,
-            dec_cfg=GRUDecCfg.parse_args(args=args),
-            enc_cfg=GRUEncCfg.parse_args(args=args),
+            dec_cfg=GRUDecCfg.from_args(args=args),
+            enc_cfg=GRUEncCfg.from_args(args=args),
             exp_name=args.exp_name,
             log_step=args.log_step,
         )
