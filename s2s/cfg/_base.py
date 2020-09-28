@@ -9,6 +9,7 @@ from typing import Union
 
 import s2s.path
 
+
 class CfgMixin(abc.ABC):
     def __iter__(self):
         for key, value in self.__dict__.items():
@@ -59,13 +60,14 @@ class CfgMixin(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def from_args(cls, args: argparse.Namespace) -> 'CfgMixin':
+    def load_from_args(cls, args: argparse.Namespace) -> 'CfgMixin':
         raise NotImplementedError
 
     @classmethod
     @abc.abstractmethod
-    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         raise NotImplementedError
+
 
 class BaseEncCfg(CfgMixin):
     def save(self, exp_name: str) -> None:
@@ -87,6 +89,7 @@ class BaseEncCfg(CfgMixin):
             key=key
         )
 
+
 class BaseDecCfg(CfgMixin):
     def save(self, exp_name: str) -> None:
         super().save(exp_name=exp_name, file_name='dec_cfg.json')
@@ -106,6 +109,7 @@ class BaseDecCfg(CfgMixin):
             file_name='dec_cfg.json',
             key=key
         )
+
 
 class BaseCfg(CfgMixin):
     dec_cfg_cstr = BaseDecCfg
@@ -154,7 +158,7 @@ class BaseCfg(CfgMixin):
         )
 
     @classmethod
-    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             '--ckpt',
             default=0,
@@ -179,15 +183,6 @@ class BaseCfg(CfgMixin):
             required=True,
             type=int,
         )
-        parser.add_argument(
-            '--model_name',
-            help='Sequence to sequence model name.',
-            required=True,
-            type=str,
-        )
 
-        if cls.enc_cfg_cstr != BaseEncCfg:
-            cls.enc_cfg_cstr.update_arg_parser(parser=parser)
-
-        if cls.dec_cfg_cstr != BaseDecCfg:
-            cls.dec_cfg_cstr.update_arg_parser(parser=parser)
+        cls.enc_cfg_cstr.update_parser(parser=parser)
+        cls.dec_cfg_cstr.update_parser(parser=parser)

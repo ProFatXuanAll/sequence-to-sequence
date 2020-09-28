@@ -4,6 +4,7 @@ import argparse
 
 from s2s.cfg._base import BaseCfg, BaseDecCfg, BaseEncCfg
 
+
 class RNNEncCfg(BaseEncCfg):
     def __init__(
             self,
@@ -26,7 +27,7 @@ class RNNEncCfg(BaseEncCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def from_args(cls, args: argparse.Namespace) -> 'RNNEncCfg':
+    def load_from_args(cls, args: argparse.Namespace) -> 'RNNEncCfg':
         return cls(
             d_emb=args.enc_d_emb,
             d_hid=args.enc_d_hid,
@@ -39,7 +40,7 @@ class RNNEncCfg(BaseEncCfg):
         )
 
     @classmethod
-    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             '--enc_d_emb',
             help='Encoder embedding dimension.',
@@ -64,11 +65,6 @@ class RNNEncCfg(BaseEncCfg):
             action='store_true',
         )
         parser.add_argument(
-            '--is_bidir',
-            help='Whether to use bidirectional RNN encoder or not.',
-            action='store_true',
-        )
-        parser.add_argument(
             '--enc_n_layer',
             help='Number of encoder RNN layer(s).',
             required=True,
@@ -85,6 +81,11 @@ class RNNEncCfg(BaseEncCfg):
             help='Encoder padding token id.',
             required=True,
             type=int,
+        )
+        parser.add_argument(
+            '--is_bidir',
+            help='Whether to use bidirectional RNN encoder or not.',
+            action='store_true',
         )
 
 
@@ -110,7 +111,7 @@ class RNNDecCfg(BaseDecCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def from_args(cls, args: argparse.Namespace) -> 'RNNDecCfg':
+    def load_from_args(cls, args: argparse.Namespace) -> 'RNNDecCfg':
         return cls(
             d_emb=args.dec_d_emb,
             d_enc_hid=args.enc_d_hid * (args.is_bidir + 1),
@@ -123,7 +124,7 @@ class RNNDecCfg(BaseDecCfg):
         )
 
     @classmethod
-    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             '--dec_d_emb',
             help='Decoder embedding dimension.',
@@ -166,6 +167,7 @@ class RNNDecCfg(BaseDecCfg):
             type=int,
         )
 
+
 class RNNCfg(BaseCfg):
     dec_cfg_cstr = RNNDecCfg
     enc_cfg_cstr = RNNEncCfg
@@ -184,15 +186,15 @@ class RNNCfg(BaseCfg):
             enc_cfg=enc_cfg,
             exp_name=exp_name,
             log_step=log_step,
-            model_name='rnn',
+            model_name='RNN',
         )
 
     @classmethod
-    def from_args(cls, args: argparse.Namespace) -> 'RNNCfg':
+    def load_from_args(cls, args: argparse.Namespace) -> 'RNNCfg':
         return cls(
             ckpt_step=args.ckpt_step,
-            dec_cfg=RNNDecCfg.from_args(args=args),
-            enc_cfg=RNNEncCfg.from_args(args=args),
+            dec_cfg=RNNDecCfg.load_from_args(args=args),
+            enc_cfg=RNNEncCfg.load_from_args(args=args),
             exp_name=args.exp_name,
             log_step=args.log_step,
         )

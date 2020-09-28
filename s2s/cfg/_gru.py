@@ -4,6 +4,7 @@ import argparse
 
 from s2s.cfg._base import BaseCfg, BaseDecCfg, BaseEncCfg
 
+
 class GRUEncCfg(BaseEncCfg):
     def __init__(
             self,
@@ -26,7 +27,7 @@ class GRUEncCfg(BaseEncCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def from_args(cls, args: argparse.Namespace) -> 'GRUEncCfg':
+    def load_from_args(cls, args: argparse.Namespace) -> 'GRUEncCfg':
         return GRUEncCfg(
             d_emb=args.enc_d_emb,
             d_hid=args.enc_d_hid,
@@ -39,7 +40,7 @@ class GRUEncCfg(BaseEncCfg):
         )
 
     @classmethod
-    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             '--enc_d_emb',
             help='Encoder embedding dimension.',
@@ -64,11 +65,6 @@ class GRUEncCfg(BaseEncCfg):
             action='store_true',
         )
         parser.add_argument(
-            '--is_bidir',
-            help='Whether to use bidirectional GRU encoder or not.',
-            action='store_true',
-        )
-        parser.add_argument(
             '--enc_n_layer',
             help='Number of encoder GRU layer(s).',
             required=True,
@@ -85,6 +81,11 @@ class GRUEncCfg(BaseEncCfg):
             help='Encoder padding token id.',
             required=True,
             type=int,
+        )
+        parser.add_argument(
+            '--is_bidir',
+            help='Whether to use bidirectional GRU encoder or not.',
+            action='store_true',
         )
 
 
@@ -110,7 +111,7 @@ class GRUDecCfg(BaseDecCfg):
         self.pad_id = pad_id
 
     @classmethod
-    def from_args(cls, args: argparse.Namespace) -> 'GRUDecCfg':
+    def load_from_args(cls, args: argparse.Namespace) -> 'GRUDecCfg':
         return GRUDecCfg(
             d_emb=args.dec_d_emb,
             d_enc_hid=args.enc_d_hid * (args.is_bidir + 1),
@@ -123,7 +124,7 @@ class GRUDecCfg(BaseDecCfg):
         )
 
     @classmethod
-    def update_arg_parser(cls, parser: argparse.ArgumentParser) -> None:
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             '--dec_d_emb',
             help='Decoder embedding dimension.',
@@ -166,6 +167,7 @@ class GRUDecCfg(BaseDecCfg):
             type=int,
         )
 
+
 class GRUCfg(BaseCfg):
     dec_cfg_cstr = GRUDecCfg
     enc_cfg_cstr = GRUEncCfg
@@ -184,15 +186,15 @@ class GRUCfg(BaseCfg):
             enc_cfg=enc_cfg,
             exp_name=exp_name,
             log_step=log_step,
-            model_name='gru',
+            model_name='GRU',
         )
 
     @classmethod
-    def from_args(cls, args: argparse.Namespace) -> 'GRUCfg':
+    def load_from_args(cls, args: argparse.Namespace) -> 'GRUCfg':
         return GRUCfg(
             ckpt_step=args.ckpt_step,
-            dec_cfg=GRUDecCfg.from_args(args=args),
-            enc_cfg=GRUEncCfg.from_args(args=args),
+            dec_cfg=GRUDecCfg.load_from_args(args=args),
+            enc_cfg=GRUEncCfg.load_from_args(args=args),
             exp_name=args.exp_name,
             log_step=args.log_step,
         )

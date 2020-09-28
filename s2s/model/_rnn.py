@@ -4,22 +4,19 @@ import torch
 
 from s2s.cfg import RNNCfg, RNNEncCfg, RNNDecCfg
 
+
 class RNNEncModel(torch.nn.Module):
     def __init__(self, cfg: RNNEncCfg):
         super().__init__()
-        self.emb = torch.nn.Embedding(
-            num_embeddings=cfg.n_vocab,
-            embedding_dim=cfg.d_emb,
-            padding_idx=cfg.pad_id,
-        )
+        self.emb = torch.nn.Embedding(cfg.n_vocab, cfg.d_emb, cfg.pad_id)
         self.emb_to_hid = torch.nn.Sequential(
-            torch.nn.Dropout(p=cfg.dropout),
-            torch.nn.Linear(in_features=cfg.d_emb, out_features=cfg.d_hid),
+            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.d_emb, cfg.d_hid),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=cfg.dropout),
-            torch.nn.Linear(in_features=cfg.d_hid, out_features=cfg.d_hid),
+            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.d_hid, cfg.d_hid),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=cfg.dropout),
+            torch.nn.Dropout(cfg.dropout),
         )
         self.hid = torch.nn.RNN(
             input_size=cfg.d_hid,
@@ -52,28 +49,24 @@ class RNNEncModel(torch.nn.Module):
 class RNNDecModel(torch.nn.Module):
     def __init__(self, cfg: RNNDecCfg):
         super().__init__()
-        self.emb = torch.nn.Embedding(
-            num_embeddings=cfg.n_vocab,
-            embedding_dim=cfg.d_emb,
-            padding_idx=cfg.pad_id,
-        )
+        self.emb = torch.nn.Embedding(cfg.n_vocab, cfg.d_emb, cfg.pad_id)
         self.emb_to_hid = torch.nn.Sequential(
-            torch.nn.Dropout(p=cfg.dropout),
-            torch.nn.Linear(in_features=cfg.d_emb, out_features=cfg.d_hid),
+            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.d_emb, cfg.d_hid),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=cfg.dropout),
-            torch.nn.Linear(in_features=cfg.d_hid, out_features=cfg.d_hid),
+            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.d_hid, cfg.d_hid),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=cfg.dropout),
+            torch.nn.Dropout(cfg.dropout),
         )
         self.enc_to_hid = torch.nn.Sequential(
-            torch.nn.Dropout(p=cfg.dropout),
-            torch.nn.Linear(in_features=cfg.d_enc_hid, out_features=cfg.d_hid * cfg.n_layer),
+            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.d_enc_hid, cfg.d_hid * cfg.n_layer),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=cfg.dropout),
-            torch.nn.Linear(in_features=cfg.d_hid * cfg.n_layer, out_features=cfg.d_hid * cfg.n_layer),
+            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.d_hid * cfg.n_layer, cfg.d_hid * cfg.n_layer),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=cfg.dropout),
+            torch.nn.Dropout(cfg.dropout),
         )
         self.hid = torch.nn.RNN(
             input_size=cfg.d_hid,
@@ -83,11 +76,11 @@ class RNNDecModel(torch.nn.Module):
             dropout=cfg.dropout * min(1, cfg.n_layer - 1),
         )
         self.hid_to_emb = torch.nn.Sequential(
-            torch.nn.Dropout(p=cfg.dropout),
-            torch.nn.Linear(in_features=cfg.d_hid, out_features=cfg.d_emb),
+            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.d_hid, cfg.d_emb),
             torch.nn.ReLU(),
-            torch.nn.Dropout(p=cfg.dropout),
-            torch.nn.Linear(in_features=cfg.d_emb, out_features=cfg.d_emb),
+            torch.nn.Dropout(cfg.dropout),
+            torch.nn.Linear(cfg.d_emb, cfg.d_emb),
         )
 
     def forward(

@@ -5,7 +5,7 @@ from s2s.model._rnn import RNNDecModel, RNNEncModel, RNNModel
 
 Model = Union[GRUModel, RNNModel]
 
-MODEL_OPTIONS: Dict[str, Type[Model]] = {
-    'gru': GRUModel,
-    'rnn': RNNModel,
+MODEL_OPTS: Dict[str, Type[Model]] = {
+    'GRU': GRUModel,
+    'RNN': RNNModel,
 }
