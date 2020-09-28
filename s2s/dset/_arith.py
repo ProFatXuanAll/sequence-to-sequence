@@ -6,10 +6,11 @@ from typing import Tuple
 import pandas as pd
 from sklearn.metrics import accuracy_score
 
-from s2s.dataset._base import BaseDataset
+from s2s.dset._base import BaseDset
 from s2s.path import DATA_PATH
 
-class ArithmeticDataset(BaseDataset):
+
+class ArithDset(BaseDset):
     def __init__(self):
         super().__init__(is_cased=False)
         df = pd.read_csv(os.path.join(DATA_PATH, 'arithmetic.csv'))
@@ -27,5 +28,7 @@ class ArithmeticDataset(BaseDataset):
         return float(tgt == pred)
 
     @staticmethod
-    def batch_eval(batch_tgt: Sequence[str], batch_pred: Sequence[str]) -> float:
+    def batch_eval(
+            batch_tgt: Sequence[str],
+            batch_pred: Sequence[str]) -> float:
         return accuracy_score(batch_tgt, batch_pred)

@@ -2,7 +2,8 @@ import re
 import unicodedata
 import torch
 
-class BaseDataset(torch.utils.data.Dataset):
+
+class BaseDset(torch.utils.data.Dataset):
     def __init__(self, is_cased: bool):
         self.is_cased = is_cased
 
