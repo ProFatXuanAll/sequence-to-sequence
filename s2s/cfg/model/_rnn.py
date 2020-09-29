@@ -5,7 +5,7 @@ import argparse
 from s2s.cfg._base import BaseModelCfg
 
 
-class RNNCfg(BaseModelCfg):
+class RNNModelCfg(BaseModelCfg):
     model_name = 'RNN'
 
     @classmethod

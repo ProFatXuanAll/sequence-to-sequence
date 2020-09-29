@@ -6,23 +6,22 @@ import s2s
 
 def load_args(script: str) -> argparse.Namespace:
     if script == 'run_train_model':
-        return _args_run_train()
+        return _args_run_train_model()
 
 
-def _args_run_train() -> argparse.Namespace:
+def _args_run_train_model() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog='python run_train_model.py',
         description='Train sequence-to-sequence model.',
     )
     subparsers = parser.add_subparsers(dest='model_name')
 
-    for k, v in s2s.cfg.MODEL_CFG_OPTS.items():
+    for model_name, model_cfg_cstr in s2s.cfg.model.MODEL_CFG_OPTS.items():
         subparser = subparsers.add_parser(
-            k,
-            help=f'Train {k} sequence-to-sequence model.',
+            model_name,
+            help=f'Train {model_name} sequence-to-sequence model.',
         )
-        v.update_parser(subparser)
-
+        s2s.cfg.BaseExpCfg.update_parser(parser=subparser)
         subparser.add_argument(
             '--ckpt',
             default=0,
@@ -41,5 +40,6 @@ def _args_run_train() -> argparse.Namespace:
             required=True,
             type=int,
         )
+        model_cfg_cstr.update_parser(parser=subparser)
 
     return parser.parse_args(sys.argv[1:])

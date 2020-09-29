@@ -1,7 +1,7 @@
 r"""Configuration for sequence to sequence model based on GRU."""
 
-from s2s.cfg._base import BaseModelCfg
+from s2s.cfg.model._rnn import RNNModelCfg
 
 
-class GRUCfg(BaseModelCfg):
+class GRUModelCfg(RNNModelCfg):
     model_name = 'GRU'

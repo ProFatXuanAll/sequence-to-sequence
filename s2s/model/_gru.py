@@ -1,11 +1,11 @@
 import torch
 
-from s2s.cfg import GRUCfg
+from s2s.cfg.model import GRUModelCfg
 from s2s.model._rnn import RNNDecModel, RNNEncModel, RNNModel
 
 
 class GRUEncModel(RNNEncModel):
-    def __init__(self, cfg: GRUCfg):
+    def __init__(self, cfg: GRUModelCfg):
         super().__init__(cfg=cfg)
         self.hid = torch.nn.GRU(
             input_size=cfg.enc_d_hid,
@@ -18,7 +18,7 @@ class GRUEncModel(RNNEncModel):
 
 
 class GRUDecModel(RNNDecModel):
-    def __init__(self, cfg: GRUCfg):
+    def __init__(self, cfg: GRUModelCfg):
         super().__init__(cfg=cfg)
         self.hid = torch.nn.GRU(
             input_size=cfg.dec_d_hid,
@@ -30,7 +30,7 @@ class GRUDecModel(RNNDecModel):
 
 
 class GRUModel(RNNModel):
-    def __init__(self, cfg: GRUCfg):
+    def __init__(self, cfg: GRUModelCfg):
         super(RNNModel, self).__init__()
         self.enc = GRUEncModel(cfg=cfg)
         self.dec = GRUDecModel(cfg=cfg)

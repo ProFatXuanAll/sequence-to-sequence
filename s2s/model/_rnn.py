@@ -1,10 +1,10 @@
 import torch
 
-from s2s.cfg import RNNCfg
+from s2s.cfg.model import RNNModelCfg
 
 
 class RNNEncModel(torch.nn.Module):
-    def __init__(self, cfg: RNNCfg):
+    def __init__(self, cfg: RNNModelCfg):
         super().__init__()
         self.emb = torch.nn.Embedding(
             num_embeddings=cfg.enc_n_vocab,
@@ -62,8 +62,9 @@ class RNNEncModel(torch.nn.Module):
     def _forward_unimplemented(self):
         pass
 
+
 class RNNDecModel(torch.nn.Module):
-    def __init__(self, cfg: RNNCfg):
+    def __init__(self, cfg: RNNModelCfg):
         super().__init__()
         self.emb = torch.nn.Embedding(
             num_embeddings=cfg.dec_n_vocab,
@@ -161,8 +162,9 @@ class RNNDecModel(torch.nn.Module):
     def _forward_unimplemented(self):
         pass
 
+
 class RNNModel(torch.nn.Module):
-    def __init__(self, cfg: RNNCfg):
+    def __init__(self, cfg: RNNModelCfg):
         super().__init__()
         self.enc = RNNEncModel(cfg=cfg)
         self.dec = RNNDecModel(cfg=cfg)

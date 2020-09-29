@@ -74,6 +74,7 @@ class BaseOptimCfg(CfgMixin):
 
 class BaseTkerCfg(CfgMixin):
     file_name = 'tker_cfg.json'
+    tker_name = 'Base'
 
     @classmethod
     def update_parser(cls, parser: argparse.ArgumentParser) -> None:

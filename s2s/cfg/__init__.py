@@ -1,10 +1,4 @@
-from typing import Dict, Type
+import s2s.cfg.model
+import s2s.cfg.tker
 
 from s2s.cfg._base import BaseExpCfg, BaseModelCfg, BaseOptimCfg, BaseTkerCfg
-from s2s.cfg._gru import GRUCfg
-from s2s.cfg._rnn import RNNCfg
-
-MODEL_CFG_OPTS: Dict[str, Type[BaseModelCfg]] = {
-    'GRU': GRUCfg,
-    'RNN': RNNCfg,
-}
