@@ -5,6 +5,7 @@ from typing import Sequence
 
 from s2s.tker._base import BaseTker
 
+
 class WhspTker(BaseTker):
     def tokenize(self, text: str) -> List[str]:
         tks = re.split(r'\s+', self.preprocess(text))

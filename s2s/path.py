@@ -17,11 +17,5 @@ PROJECT_ROOT = os.path.abspath(os.path.join(
     os.pardir,
     os.pardir
 ))
-DATA_PATH = os.path.join(
-    PROJECT_ROOT,
-    'data'
-)
-EXP_PATH = os.path.join(
-    PROJECT_ROOT,
-    'exp'
-)
+DATA_PATH = os.path.join(PROJECT_ROOT, 'data')
+EXP_PATH = os.path.join(PROJECT_ROOT, 'exp')

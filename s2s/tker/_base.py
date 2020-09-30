@@ -11,20 +11,21 @@ from typing import Sequence
 import s2s
 import s2s.path
 
+from s2s.cfg import BaseExpCfg
 from s2s.cfg import BaseTkerCfg
 
 
 class BaseTker(abc.ABC):
     file_name = 'tker.json'
 
-    def __init__(self, cfg: BaseTkerCfg):
-        self.is_cased = cfg.is_cased
-        self.min_count = cfg.min_count
-        self.n_vocab = cfg.n_vocab
-        self.bos_tk = self.preprocess(cfg.bos_tk)
-        self.eos_tk = self.preprocess(cfg.eos_tk)
-        self.pad_tk = self.preprocess(cfg.pad_tk)
-        self.unk_tk = self.preprocess(cfg.unk_tk)
+    def __init__(self, tker_cfg: BaseTkerCfg):
+        self.is_cased = tker_cfg.is_cased
+        self.min_count = tker_cfg.min_count
+        self.n_vocab = tker_cfg.n_vocab
+        self.bos_tk = self.preprocess(tker_cfg.bos_tk)
+        self.eos_tk = self.preprocess(tker_cfg.eos_tk)
+        self.pad_tk = self.preprocess(tker_cfg.pad_tk)
+        self.unk_tk = self.preprocess(tker_cfg.unk_tk)
         self.tk2id = {}
         self.id2tk = {}
 
@@ -63,8 +64,8 @@ class BaseTker(abc.ABC):
             self.id2tk[max_id] = tk
             max_id += 1
 
-    def save(self, cfg: BaseTkerCfg):
-        exp_path = os.path.join(s2s.path.EXP_PATH, cfg.exp_name)
+    def save(self, exp_cfg: BaseExpCfg):
+        exp_path = os.path.join(s2s.path.EXP_PATH, exp_cfg.exp_name)
         file_path = os.path.join(exp_path, self.__class__.file_name)
 
         if not os.path.exists(exp_path):
@@ -74,10 +75,10 @@ class BaseTker(abc.ABC):
             json.dump(self.tk2id, tker_file, ensure_ascii=False, indent=2)
 
     @classmethod
-    def load(cls, cfg: BaseTkerCfg):
+    def load(cls, exp_cfg: BaseExpCfg):
         file_path = os.path.join(
             s2s.path.EXP_PATH,
-            cfg.exp_name,
+            exp_cfg.exp_name,
             cls.file_name,
         )
 

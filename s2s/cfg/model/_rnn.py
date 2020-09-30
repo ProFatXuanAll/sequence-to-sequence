@@ -8,6 +8,23 @@ from s2s.cfg._base import BaseModelCfg
 class RNNModelCfg(BaseModelCfg):
     model_name = 'RNN'
 
+    def __init__(self, **kwargs):
+        self.dec_d_emb = kwargs['dec_d_emb']
+        self.dec_d_hid = kwargs['dec_d_hid']
+        self.dec_dropout = kwargs['dec_dropout']
+        self.dec_is_cased = kwargs['dec_is_cased']
+        self.dec_n_layer = kwargs['dec_n_layer']
+        self.dec_n_vocab = kwargs['dec_n_vocab']
+        self.dec_pad_id = kwargs['dec_pad_id']
+        self.enc_d_emb = kwargs['enc_d_emb']
+        self.enc_d_hid = kwargs['enc_d_hid']
+        self.enc_dropout = kwargs['enc_dropout']
+        self.enc_is_cased = kwargs['enc_is_cased']
+        self.enc_n_layer = kwargs['enc_n_layer']
+        self.enc_n_vocab = kwargs['enc_n_vocab']
+        self.enc_pad_id = kwargs['enc_pad_id']
+        self.is_bidir = kwargs['is_bidir']
+
     @classmethod
     def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(

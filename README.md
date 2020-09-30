@@ -12,7 +12,18 @@ git clone https://github.com/ProFatXuanAll/sequence-to-sequence.git
 pipenv install
 ```
 
-## Train
+## Train Tokenizer
+
+```sh
+python run_train_tker.py character \
+  --exp_name 'test_tker' \
+  --dset_name 'arithmetic' \
+  --min_count 1 \
+  --n_vocab 100 \
+  --is_cased
+```
+
+## Train Model
 
 ```sh
 python run_train_model.py RNN \
