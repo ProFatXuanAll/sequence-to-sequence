@@ -11,6 +11,8 @@ from s2s.path import DATA_PATH
 
 
 class ArithDset(BaseDset):
+    dset_name = 'arithmethic'
+
     def __init__(self):
         super().__init__(is_cased=False)
         df = pd.read_csv(os.path.join(DATA_PATH, 'arithmetic.csv'))
@@ -30,5 +32,6 @@ class ArithDset(BaseDset):
     @staticmethod
     def batch_eval(
             batch_tgt: Sequence[str],
-            batch_pred: Sequence[str]) -> float:
+            batch_pred: Sequence[str]
+    ) -> float:
         return accuracy_score(batch_tgt, batch_pred)

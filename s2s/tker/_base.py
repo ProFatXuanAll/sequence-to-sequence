@@ -1,4 +1,6 @@
 import abc
+import json
+import os
 import re
 import unicodedata
 
@@ -6,10 +8,15 @@ from collections import Counter
 from typing import List
 from typing import Sequence
 
+import s2s
+import s2s.path
+
 from s2s.cfg import BaseTkerCfg
 
 
 class BaseTker(abc.ABC):
+    file_name = 'tker.json'
+
     def __init__(self, cfg: BaseTkerCfg):
         self.is_cased = cfg.is_cased
         self.min_count = cfg.min_count
@@ -36,22 +43,50 @@ class BaseTker(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def detokenize(self, tks: List[str]) -> str:
+    def detokenize(self, tks: Sequence[str]) -> str:
         raise NotImplementedError
 
     def build_vocab(self, batch_src: Sequence[str]):
-        counter = Counter()
+        c = Counter()
         for src in batch_src:
-            counter.update(self.tokenize(self.preprocess(src)))
+            c.update(self.tokenize(self.preprocess(src)))
 
         max_id = len(self.tk2id)
-        for token, token_count in counter.most_common():
-            if token_count < self.min_count:
+        for tk, tk_count in c.most_common():
+            if tk_count < self.min_count:
                 continue
 
-            if token in self.tk2id:
+            if tk in self.tk2id:
                 continue
 
-            self.tk2id[token] = max_id
-            self.id2tk[max_id] = token
+            self.tk2id[tk] = max_id
+            self.id2tk[max_id] = tk
             max_id += 1
+
+    def save(self, cfg: BaseTkerCfg):
+        exp_path = os.path.join(s2s.path.EXP_PATH, cfg.exp_name)
+        file_path = os.path.join(exp_path, self.__class__.file_name)
+
+        if not os.path.exists(exp_path):
+            os.makedirs(exp_path)
+
+        with open(file_path, 'w', encoding='utf-8') as tker_file:
+            json.dump(self.tk2id, tker_file, ensure_ascii=False, indent=2)
+
+    @classmethod
+    def load(cls, cfg: BaseTkerCfg):
+        file_path = os.path.join(
+            s2s.path.EXP_PATH,
+            cfg.exp_name,
+            cls.file_name,
+        )
+
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f'{file_path} does not exist.')
+
+        self = cls(cfg=cfg)
+        with open(file_path, 'r', encoding='utf-8') as tker_file:
+            self.tk2id = json.load(tker_file)
+        self.id2tk = {tk_id: tk for tk, tk_id in self.tk2id.items()}
+
+        return self

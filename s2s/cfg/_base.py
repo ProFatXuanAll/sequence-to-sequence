@@ -58,6 +58,21 @@ class BaseModelCfg(CfgMixin):
     file_name = 'model_cfg.json'
     model_name = 'Base'
 
+    @classmethod
+    def update_parser(cls, parser: argparse.ArgumentParser) -> None:
+        parser.add_argument(
+            '--dec_tker_exp',
+            help='Experiment name of the decoder paired tokenizer.',
+            required=True,
+            type=str,
+        )
+        parser.add_argument(
+            '--enc_tker_exp',
+            help='Experiment name of the encoder paired tokenizer.',
+            required=True,
+            type=str,
+        )
+
 
 class BaseOptimCfg(CfgMixin):
     file_name = 'optim_cfg.json'
@@ -79,6 +94,12 @@ class BaseTkerCfg(CfgMixin):
     @classmethod
     def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
+            '--dset_name',
+            help='',
+            required=True,
+            type=str,
+        )
+        parser.add_argument(
             '--min_count',
             help='',
             required=True,
@@ -92,6 +113,16 @@ class BaseTkerCfg(CfgMixin):
         )
         parser.add_argument(
             '--is_cased',
+            action='store_true',
+            help='',
+        )
+        parser.add_argument(
+            '--is_dec',
+            action='store_true',
+            help='',
+        )
+        parser.add_argument(
+            '--is_enc',
             action='store_true',
             help='',
         )
