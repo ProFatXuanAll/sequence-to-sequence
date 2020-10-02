@@ -16,8 +16,12 @@ class ArithDset(BaseDset):
     def __init__(self):
         super().__init__()
         df = pd.read_csv(os.path.join(DATA_PATH, 'arithmetic.csv'))
-        self.src.extend(df['src'].apply(str).apply(self.__class__.preprocess).to_list())
-        self.tgt.extend(df['tgt'].apply(str).apply(self.__class__.preprocess).to_list())
+        self.src.extend(
+            df['src'].apply(str).apply(
+                self.__class__.preprocess).to_list())
+        self.tgt.extend(
+            df['tgt'].apply(str).apply(
+                self.__class__.preprocess).to_list())
 
     def __len__(self) -> int:
         return len(self.tgt)

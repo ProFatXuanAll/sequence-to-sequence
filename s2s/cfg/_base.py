@@ -71,19 +71,19 @@ class BaseModelCfg(CfgMixin):
     model_name = 'Base'
 
     def __init__(self, **kwargs):
-        self.dec_tker_exp = kwargs['dec_tker_exp']
-        self.enc_tker_exp = kwargs['enc_tker_exp']
+        self.dec_tknzr_exp = kwargs['dec_tknzr_exp']
+        self.enc_tknzr_exp = kwargs['enc_tknzr_exp']
 
     @classmethod
     def update_parser(cls, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
-            '--dec_tker_exp',
+            '--dec_tknzr_exp',
             help='Experiment name of the decoder paired tokenizer.',
             required=True,
             type=str,
         )
         parser.add_argument(
-            '--enc_tker_exp',
+            '--enc_tknzr_exp',
             help='Experiment name of the encoder paired tokenizer.',
             required=True,
             type=str,
@@ -106,9 +106,9 @@ class BaseOptimCfg(CfgMixin):
         )
 
 
-class BaseTkerCfg(BaseExpCfg):
-    file_name = 'tker_cfg.json'
-    tker_name = 'Base'
+class BaseTknzrCfg(BaseExpCfg):
+    file_name = 'tknzr_cfg.json'
+    tknzr_name = 'Base'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -120,7 +120,7 @@ class BaseTkerCfg(BaseExpCfg):
         self.eos_tk: str = kwargs['eos_tk']
         self.pad_tk: str = kwargs['pad_tk']
         self.unk_tk: str = kwargs['unk_tk']
-        self.tker_name: str = self.__class__.tker_name
+        self.tknzr_name: str = self.__class__.tknzr_name
 
     @classmethod
     def update_parser(cls, parser: argparse.ArgumentParser) -> None:
@@ -129,9 +129,8 @@ class BaseTkerCfg(BaseExpCfg):
         dset_choices = []
         for dset_name in DSET_OPTS:
             dset_choices.extend([
-                dset_name,
                 f'{dset_name}.src',
-                f'{dset_name}.tgt'
+                f'{dset_name}.tgt',
             ])
 
         parser.add_argument(
@@ -191,9 +190,8 @@ class BaseTkerCfg(BaseExpCfg):
         dset_choices = []
         for dset_name in DSET_OPTS:
             dset_choices.extend([
-                dset_name,
                 f'{dset_name}.src',
-                f'{dset_name}.tgt'
+                f'{dset_name}.tgt',
             ])
 
         parser.add_argument(

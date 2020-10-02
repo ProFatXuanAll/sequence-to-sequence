@@ -3,15 +3,15 @@ import re
 from typing import List
 from typing import Sequence
 
-from s2s.tker._base import BaseTker
+from s2s.tknzr._base import BaseTknzr
 
 
-class WhspTker(BaseTker):
-    def tokenize(self, text: str) -> List[str]:
+class WhspTknzr(BaseTknzr):
+    def tknz(self, text: str) -> List[str]:
         tks = re.split(r'\s+', self.preprocess(text))
         if tks == ['']:
             return []
         return tks
 
-    def detokenize(self, tks: Sequence[str]) -> str:
+    def dtknz(self, tks: Sequence[str]) -> str:
         return self.preprocess(' '.join(tks))
