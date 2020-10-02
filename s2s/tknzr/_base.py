@@ -51,6 +51,19 @@ class BaseTknzr(abc.ABC):
     def dtknz(self, tks: Sequence[str]) -> str:
         raise NotImplementedError
 
+    def encode(self, text: str) -> List[int]:
+        res = []
+        for tk in self.tknz(text=self.preprocess(text=text)):
+            if tk in self.tk2id:
+                res.append(self.tk2id[tk])
+            else:
+                res.append(self.tk2id[self.unk_tk])
+
+        return res
+
+    def decode(self, tk_ids: Sequence[int]) -> str:
+        return self.dtknz(tks=[self.id2tk[tk_id] for tk_id in tk_ids])
+
     def build_vocab(self, batch_src: Sequence[str]):
         c = Counter()
         for src in batch_src:
@@ -58,6 +71,9 @@ class BaseTknzr(abc.ABC):
 
         max_id = len(self.tk2id)
         for tk, tk_count in c.most_common():
+            if max_id >= self.n_vocab:
+                break
+
             if tk_count < self.min_count:
                 continue
 
