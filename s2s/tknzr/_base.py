@@ -5,26 +5,25 @@ import re
 import unicodedata
 
 from collections import Counter
+from typing import Dict
 from typing import List
 from typing import Sequence
 
-import s2s
-import s2s.path
-
-from s2s.cfg import BaseTknzrCfg
+from s2s.path import EXP_PATH
 
 
 class BaseTknzr(abc.ABC):
     file_name = 'tknzr.json'
+    tknzr_name = 'base'
 
-    def __init__(self, tknzr_cfg: BaseTknzrCfg):
-        self.is_cased = tknzr_cfg.is_cased
-        self.min_count = tknzr_cfg.min_count
-        self.n_vocab = tknzr_cfg.n_vocab
-        self.bos_tk = self.preprocess(tknzr_cfg.bos_tk)
-        self.eos_tk = self.preprocess(tknzr_cfg.eos_tk)
-        self.pad_tk = self.preprocess(tknzr_cfg.pad_tk)
-        self.unk_tk = self.preprocess(tknzr_cfg.unk_tk)
+    def __init__(self, **kwargs):
+        self.is_cased = kwargs['is_cased']
+        self.min_count = kwargs['min_count']
+        self.n_vocab = kwargs['n_vocab']
+        self.bos_tk = self.preprocess(kwargs['bos_tk'])
+        self.eos_tk = self.preprocess(kwargs['eos_tk'])
+        self.pad_tk = self.preprocess(kwargs['pad_tk'])
+        self.unk_tk = self.preprocess(kwargs['unk_tk'])
         self.tk2id = {}
         self.id2tk = {}
 
@@ -85,7 +84,7 @@ class BaseTknzr(abc.ABC):
             max_id += 1
 
     def save(self, exp_name: str):
-        exp_path = os.path.join(s2s.path.EXP_PATH, exp_name)
+        exp_path = os.path.join(EXP_PATH, exp_name)
         file_path = os.path.join(exp_path, self.__class__.file_name)
 
         if not os.path.exists(exp_path):
@@ -95,17 +94,13 @@ class BaseTknzr(abc.ABC):
             json.dump(self.tk2id, tknzr_file, ensure_ascii=False, indent=2)
 
     @classmethod
-    def load(cls, tknzr_cfg: BaseTknzrCfg):
-        file_path = os.path.join(
-            s2s.path.EXP_PATH,
-            tknzr_cfg.exp_name,
-            cls.file_name,
-        )
+    def load(cls, cfg: Dict):
+        file_path = os.path.join(EXP_PATH, cfg['exp_name'], cls.file_name)
 
         if not os.path.exists(file_path):
             raise FileNotFoundError(f'{file_path} does not exist.')
 
-        self = cls(tknzr_cfg=tknzr_cfg)
+        self = cls(**cfg)
         with open(file_path, 'r', encoding='utf-8') as tknzr_file:
             self.tk2id = json.load(tknzr_file)
         self.id2tk = {tk_id: tk for tk, tk_id in self.tk2id.items()}

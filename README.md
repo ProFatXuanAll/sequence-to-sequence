@@ -14,16 +14,16 @@ pipenv install
 
 ## Train Tokenizer
 
-### Train New Tokenizer
+### Train Source Text Tokenizer
 
 ```sh
-python run_train_tknzr.py character --exp_name 'test_tknzr' --dset_name 'arithmetic.src' --min_count 1 --n_vocab 100 --is_cased
+python run_train_tknzr.py character --exp_name 'src_tknzr' --dset_name 'arithmetic.src' --min_count 1 --n_vocab 50 --is_cased
 ```
 
-### Train Old Tokenizer
+### Train Target Text Tokenizer
 
 ```sh
-python run_train_tknzr.py continue --exp_name 'test_tknzr' --dset_name 'arithmetic.tgt' --n_vocab 200
+python run_train_tknzr.py character --exp_name 'tgt_tknzr' --dset_name 'arithmetic.tgt' --min_count 1 --n_vocab 50 --is_cased
 ```
 
 ## Train Model

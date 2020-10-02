@@ -2,27 +2,100 @@ import argparse
 
 from typing import Tuple
 
-from s2s.cfg import BaseTknzrCfg
-from s2s.cfg.tknzr import TKNZR_CFG_OPTS
 from s2s.dset import DSET_OPTS
-from s2s.tknzr import BaseTknzr, TKNZR_OPTS
-from s2s.util import load_args, peek_cfg
+from s2s.tknzr import TKNZR_OPTS
+from s2s.util import save_cfg
+
+
+def parse_arg() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog='python run_train_tknzr.py',
+        description='Train tokenizer.',
+    )
+
+    dset_choices = []
+    for dset_name in DSET_OPTS:
+        dset_choices.extend([
+            f'{dset_name}.src',
+            f'{dset_name}.tgt',
+        ])
+
+    parser.add_argument(
+        'tknzr_name',
+        choices=TKNZR_OPTS.keys(),
+        help='Tokenizer name',
+        type=str,
+    )
+    parser.add_argument(
+        '--dset_name',
+        choices=dset_choices,
+        help='Name(s) of the dataset(s) to train tokenizer.',
+        nargs='+',
+        required=True,
+    )
+    parser.add_argument(
+        '--exp_name',
+        help='Current experiment name.',
+        required=True,
+        type=str,
+    )
+    parser.add_argument(
+        '--is_cased',
+        action='store_true',
+        help='',
+    )
+    parser.add_argument(
+        '--min_count',
+        help='',
+        required=True,
+        type=int,
+    )
+    parser.add_argument(
+        '--n_vocab',
+        help='Tokenizer vocabulary size.',
+        required=True,
+        type=int,
+    )
+    parser.add_argument(
+        '--bos_tk',
+        help='',
+        default='[bos]',
+        type=str,
+    )
+    parser.add_argument(
+        '--eos_tk',
+        help='',
+        default='[eos]',
+        type=str,
+    )
+    parser.add_argument(
+        '--pad_tk',
+        help='',
+        default='[pad]',
+        type=str,
+    )
+    parser.add_argument(
+        '--unk_tk',
+        help='',
+        default='[unk]',
+        type=str,
+    )
+
+    return parser.parse_args()
 
 
 def main():
     r"""Main function."""
     # Load command line arguments.
-    args = load_args(script='run_train_tknzr')
+    args = parse_arg()
 
-    # Perform `python run_train_tknzr.py continue`.
-    if args.tknzr_name == 'continue':
-        tknzr, tknzr_cfg = get_old_tknzr_and_cfg(args=args)
-    # Perform `python run_train_tknzr.py some_tknzr`.
-    else:
-        tknzr, tknzr_cfg = get_new_tknzr_and_cfg(args=args)
+    # Sort dataset list for readability.
+    args.dset_name.sort()
 
-    # Build tokenizer vocabulary. Same dataset can be used to build vocabulary
-    # again when `n_vocab` increase, so no need to filter out used dataset.
+    # Create new tokenizer.
+    tknzr = TKNZR_OPTS[args.tknzr_name](**args.__dict__)
+
+    # Build tokenizer vocabulary.
     for dset_name in args.dset_name:
         dset = DSET_OPTS[dset_name[:-4]]()
         if '.src' in dset_name:
@@ -31,53 +104,8 @@ def main():
             tknzr.build_vocab(dset.all_tgt())
 
     # Save tokenizer and its configuration.
-    tknzr_cfg.save(exp_name=args.exp_name)
+    save_cfg(cfg=args.__dict__, exp_name=args.exp_name, file_name='cfg.json')
     tknzr.save(exp_name=args.exp_name)
-
-
-def get_new_tknzr_and_cfg(
-        args: argparse.Namespace,
-) -> Tuple[BaseTknzrCfg, BaseTknzr]:
-    # Create new tokenizer configuration.
-    tknzr_cfg = TKNZR_CFG_OPTS[args.tknzr_name](**args.__dict__)
-
-    # Sort dataset list for readability.
-    tknzr_cfg.dset_name.sort()
-
-    # Create new tokenizer.
-    tknzr = TKNZR_OPTS[args.tknzr_name](tknzr_cfg=tknzr_cfg)
-
-    return tknzr, tknzr_cfg
-
-
-def get_old_tknzr_and_cfg(
-        args: argparse.Namespace,
-) -> Tuple[BaseTknzrCfg, BaseTknzr]:
-    # Get tokenizer name from configuration file.
-    tknzr_name = peek_cfg(
-        exp_name=args.exp_name,
-        file_name=BaseTknzrCfg.file_name,
-        key='tknzr_name',
-    )
-
-    # Polymorphically load tokenizer configuration.
-    tknzr_cfg = TKNZR_CFG_OPTS[tknzr_name].load(exp_name=args.exp_name)
-
-    # Add new dataset. Same dataset must only appear once.
-    for dset_name in args.dset_name:
-        if dset_name not in tknzr_cfg.dset_name:
-            tknzr_cfg.dset_name.append(dset_name)
-
-    # Sort dataset list for readability.
-    tknzr_cfg.dset_name.sort()
-
-    # Increase vocab size.
-    tknzr_cfg.n_vocab = max(tknzr_cfg.n_vocab, args.n_vocab)
-
-    # Polymorphically load tokenizer.
-    tknzr = TKNZR_OPTS[tknzr_name].load(tknzr_cfg=tknzr_cfg)
-
-    return tknzr, tknzr_cfg
 
 
 if __name__ == '__main__':
