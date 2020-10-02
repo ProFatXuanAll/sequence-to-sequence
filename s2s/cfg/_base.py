@@ -66,16 +66,19 @@ class BaseExpCfg(CfgMixin):
         )
 
 
-class BaseModelCfg(CfgMixin):
+class BaseModelCfg(BaseExpCfg):
     file_name = 'model_cfg.json'
     model_name = 'Base'
 
     def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.dec_tknzr_exp = kwargs['dec_tknzr_exp']
         self.enc_tknzr_exp = kwargs['enc_tknzr_exp']
 
     @classmethod
     def update_parser(cls, parser: argparse.ArgumentParser) -> None:
+        super().update_parser(parser=parser)
+
         parser.add_argument(
             '--dec_tknzr_exp',
             help='Experiment name of the decoder paired tokenizer.',
@@ -136,7 +139,7 @@ class BaseTknzrCfg(BaseExpCfg):
         parser.add_argument(
             '--dset_name',
             choices=dset_choices,
-            help='Name of the dataset(s) to perform tokenizer training experiment.',
+            help='Name(s) of the dataset(s) to perform tokenizer training experiment.',
             nargs='+',
             required=True,
         )
@@ -184,7 +187,7 @@ class BaseTknzrCfg(BaseExpCfg):
 
     @classmethod
     def cont_parser(cls, parser: argparse.ArgumentParser) -> None:
-        r"""Continue training."""
+        r"""Continue training tokenizer."""
         super().update_parser(parser=parser)
 
         dset_choices = []

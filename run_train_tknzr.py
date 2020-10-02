@@ -16,10 +16,10 @@ def main():
 
     # Perform `python run_train_tknzr.py continue`.
     if args.tknzr_name == 'continue':
-        tknzr_cfg, tknzr = get_old_tknzr_and_cfg(args=args)
+        tknzr, tknzr_cfg = get_old_tknzr_and_cfg(args=args)
     # Perform `python run_train_tknzr.py some_tknzr`.
     else:
-        tknzr_cfg, tknzr = get_new_tknzr_and_cfg(args=args)
+        tknzr, tknzr_cfg = get_new_tknzr_and_cfg(args=args)
 
     # Build tokenizer vocabulary. Same dataset can be used to build vocabulary
     # again when `n_vocab` increase, so no need to filter out used dataset.
