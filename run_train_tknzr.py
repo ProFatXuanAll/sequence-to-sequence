@@ -66,7 +66,7 @@ def main():
     # Sort dataset list for readability.
     args.dset_name.sort()
 
-    # Create new tokenizer.
+    # Create tokenizer.
     tknzr = TKNZR_OPTS[args.tknzr_name](cfg=args.__dict__)
 
     # Build tokenizer vocabulary.

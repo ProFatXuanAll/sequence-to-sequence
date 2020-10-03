@@ -59,7 +59,7 @@ class RNNEncModel(torch.nn.Module):
         out, _ = self.hid(self.emb_to_hid(self.emb(src)))
 
         # shape: (B, H * (is_bidir + 1))
-        return out[torch.arange(out.size(0)).to(out.device), src_len]
+        return out[torch.arange(out.size(0)).to(out.device), src_len - 1]
 
 
 class RNNDecModel(torch.nn.Module):
@@ -96,7 +96,7 @@ class RNNDecModel(torch.nn.Module):
                 p=model_cfg['dec_dropout'],
             ),
             torch.nn.Linear(
-                in_features=model_cfg['enc_d_hid'],
+                in_features=model_cfg['enc_d_hid'] * (model_cfg['is_bidir'] + 1),
                 out_features=model_cfg['dec_d_hid'] * model_cfg['dec_n_layer'],
             ),
             torch.nn.ReLU(),
@@ -152,14 +152,15 @@ class RNNDecModel(torch.nn.Module):
         # shape: (B, S, H)
         out, _ = self.hid(
             self.emb_to_hid(self.emb(tgt)),
-            self.enc_to_hid(enc_hid)
+            self.enc_to_hid(enc_hid).reshape(
+                self.hid.num_layers,
+                -1,
+                self.hid.hidden_size
+            ),
         )
 
-        # shape: (B, S, E)
-        return self.hid_to_emb(out)
-
-    def _forward_unimplemented(self):
-        pass
+        # shape: (B, S, V)
+        return self.hid_to_emb(out) @ self.emb.weight.transpose(0, 1)
 
 
 class RNNModel(torch.nn.Module):
@@ -186,6 +187,8 @@ class RNNModel(torch.nn.Module):
             src: torch.Tensor,
             src_len: torch.Tensor,
             tgt: torch.Tensor,
+            *pos,
+            **kwargs,
     ) -> torch.Tensor:
         # shape: (B, S, E)
         return self.dec(self.enc(src=src, src_len=src_len), tgt=tgt)
@@ -196,6 +199,8 @@ class RNNModel(torch.nn.Module):
             src_len: torch.Tensor,
             tgt: torch.Tensor,
             tgt_len: torch.Tensor,
+            *pos,
+            **kwargs,
     ):
         # shape: (B, S, E)
         logits = self(src=src, src_len=src_len, tgt=tgt)
@@ -203,7 +208,7 @@ class RNNModel(torch.nn.Module):
         # shape: (B)
         return logits[
             torch.arange(logits.size(0)).to(logits.device),
-            tgt_len
+            tgt_len - 1
         ].argmax(dim=-1)
 
     @classmethod

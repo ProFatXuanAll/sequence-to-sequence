@@ -36,17 +36,20 @@ python run_train_model.py RNN \
   --dec_d_hid 300 \
   --dec_dropout 0.1 \
   --dec_n_layer 2 \
+  --dec_max_len 20 \
   --dec_tknzr_exp 'tgt_tknzr' \
   --dset_name 'arithmetic' \
   --enc_d_emb 100 \
   --enc_d_hid 300 \
   --enc_dropout 0.1 \
   --enc_n_layer 2 \
+  --enc_max_len 30 \
   --enc_tknzr_exp 'src_tknzr' \
   --epoch 10 \
   --exp_name 'test' \
   --is_bidir \
   --log_step 500 \
   --lr 1e-4 \
+  --max_norm 1.0 \
   --seed 42
 ```

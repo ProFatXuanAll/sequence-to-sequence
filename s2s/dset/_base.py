@@ -4,6 +4,7 @@ import torch
 
 from typing import Tuple
 
+
 class BaseDset(torch.utils.data.Dataset):
     def __init__(self):
         self.src = []

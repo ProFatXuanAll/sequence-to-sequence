@@ -1,11 +1,17 @@
 import argparse
+import os
 
 import torch
+import torch.utils.tensorboard
+
+from tqdm import tqdm
 
 from s2s.dset import DSET_OPTS
 from s2s.model import MODEL_OPTS
+from s2s.path import EXP_PATH
 from s2s.tknzr import TKNZR_OPTS
 from s2s.util import load_cfg, save_cfg, set_seed
+
 
 def parse_arg() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -33,6 +39,12 @@ def parse_arg() -> argparse.Namespace:
             type=int,
         )
         subparser.add_argument(
+            '--dec_max_len',
+            help='Decoder max sequence length.',
+            required=True,
+            type=int,
+        )
+        subparser.add_argument(
             '--dec_tknzr_exp',
             help='Experiment name of the decoder paired tokenizer.',
             required=True,
@@ -44,6 +56,12 @@ def parse_arg() -> argparse.Namespace:
             help='Name of the dataset to train model.',
             required=True,
             type=str,
+        )
+        subparser.add_argument(
+            '--enc_max_len',
+            help='Encoder max sequence length.',
+            required=True,
+            type=int,
         )
         subparser.add_argument(
             '--enc_tknzr_exp',
@@ -76,6 +94,12 @@ def parse_arg() -> argparse.Namespace:
             type=float,
         )
         subparser.add_argument(
+            '--max_norm',
+            help='Gradient bound to avoid gradient explosion.',
+            required=True,
+            type=float,
+        )
+        subparser.add_argument(
             '--seed',
             help='Control random seed.',
             required=True,
@@ -102,18 +126,130 @@ def main():
     dec_tknzr_cfg = load_cfg(exp_name=args.dec_tknzr_exp)
     dec_tknzr = TKNZR_OPTS[dec_tknzr_cfg['tknzr_name']].load(cfg=dec_tknzr_cfg)
 
-    # Load datset.
+    # Load datset and create dataloader.
     dset = DSET_OPTS[args.dset_name]()
+    dldr = torch.utils.data.DataLoader(
+        dataset=dset,
+        batch_size=args.batch_size,
+        shuffle=True,
+    )
 
-    # Create new model.
+    # Get CUDA device.
+    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+
+    # Create model.
     model = MODEL_OPTS[args.model_name](
         dec_tknzr_cfg=dec_tknzr_cfg,
         enc_tknzr_cfg=enc_tknzr_cfg,
         model_cfg=args.__dict__,
     )
+    model = model.to(device)
+
+    # Create optimizer.
+    optim = torch.optim.Adam(
+        params=model.parameters(),
+        lr=args.lr,
+    )
+
+    # Create objective function.
+    objtv = torch.nn.CrossEntropyLoss()
 
     # Save model configuration.
     save_cfg(cfg=args.__dict__, exp_name=args.exp_name)
+
+    # Global step.
+    step = 0
+
+    # Create experiment folder.
+    exp_path = os.path.join(EXP_PATH, args.exp_name)
+
+    if not os.path.exists(exp_path):
+        os.makedirs(exp_path)
+
+    # Create logger and log folder.
+    writer = torch.utils.tensorboard.SummaryWriter(
+        os.path.join(EXP_PATH, 'log', args.exp_name)
+    )
+
+    # Log average loss.
+    total_loss = 0.0
+
+    for cur_epoch in range(args.epoch):
+        tqdm_dldr = tqdm(dldr, desc=f'epoch: {cur_epoch}, loss: {0:.6f}')
+        for batch in tqdm_dldr:
+            src, src_len = enc_tknzr.batch_enc(
+                batch_text=batch[0],
+                max_len=args.enc_max_len,
+            )
+            tgt, tgt_len = dec_tknzr.batch_enc(
+                batch_text=batch[1],
+                max_len=args.dec_max_len,
+            )
+            src = torch.tensor(src).to(device)
+            src_len = torch.tensor(src_len).to(device)
+            tgt = torch.tensor(tgt).to(device)
+            tgt_len = torch.tensor(tgt_len).to(device)
+
+            # Forward pass.
+            logits = model(
+                src=src,
+                src_len=src_len,
+                tgt=tgt[:, :-1],
+                tgt_len=tgt_len - 1,
+            )
+
+            # Calculate loss.
+            loss = objtv(
+                logits.reshape(-1, dec_tknzr_cfg['n_vocab']),
+                tgt[:, 1:].reshape(-1),
+            )
+
+            # Calculate average loss.
+            total_loss += loss.item()
+
+            # Backward pass.
+            loss.backward()
+
+            # Perform gradient clipping.
+            torch.nn.utils.clip_grad_norm_(
+                parameters=model.parameters(),
+                max_norm=args.max_norm,
+            )
+
+            # Gradient descent.
+            optim.step()
+
+            # Clean up gradient.
+            optim.zero_grad()
+
+            # Increment global step.
+            step += 1
+
+            # Log loss on CLI.
+            tqdm_dldr.set_description(f'epoch: {cur_epoch}, loss: {0:.6f}')
+
+            # Save checkpoint for each `ckpt_step`.
+            if step % args.ckpt_step == 0:
+                torch.save(
+                    model.state_dict(),
+                    os.path.join(exp_path, f'model-{step}.pt'),
+                )
+
+            if step % args.log_step == 0:
+                # Log average loss.
+                writer.add_scalar('loss', total_loss / args.ckpt_step, step)
+                total_loss = 0.0
+
+    # Save last checkpoint.
+    torch.save(
+        model.state_dict(),
+        os.path.join(exp_path, f'model-{step}.pt'),
+    )
+
+    # Close logger.
+    writer.close()
 
 
 if __name__ == '__main__':

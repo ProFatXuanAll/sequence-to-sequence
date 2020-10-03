@@ -15,7 +15,13 @@ def save_cfg(cfg: Dict, exp_name: str) -> None:
         os.makedirs(exp_path)
 
     with open(file_path, 'w', encoding='utf-8') as output_file:
-        json.dump(cfg, output_file, ensure_ascii=False, indent=2)
+        json.dump(
+            cfg,
+            output_file,
+            ensure_ascii=False,
+            indent=2,
+            sort_keys=True,
+        )
 
 
 def load_cfg(exp_name: str) -> Dict:
