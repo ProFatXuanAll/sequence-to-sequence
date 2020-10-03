@@ -1,44 +1,46 @@
-import torch
+import argparse
 
-from s2s.cfg.model import RNNModelCfg
+from typing import Dict
+
+import torch
 
 
 class RNNEncModel(torch.nn.Module):
-    def __init__(self, cfg: RNNModelCfg):
+    def __init__(self, enc_tknzr_cfg: Dict, model_cfg: Dict):
         super().__init__()
         self.emb = torch.nn.Embedding(
-            num_embeddings=cfg.enc_n_vocab,
-            embedding_dim=cfg.enc_d_emb,
-            padding_idx=cfg.enc_pad_id,
+            num_embeddings=enc_tknzr_cfg['n_vocab'],
+            embedding_dim=model_cfg['enc_d_emb'],
+            padding_idx=0,
         )
         self.emb_to_hid = torch.nn.Sequential(
             torch.nn.Dropout(
-                p=cfg.enc_dropout,
+                p=model_cfg['enc_dropout'],
             ),
             torch.nn.Linear(
-                in_features=cfg.enc_d_emb,
-                out_features=cfg.enc_d_hid,
+                in_features=model_cfg['enc_d_emb'],
+                out_features=model_cfg['enc_d_hid'],
             ),
             torch.nn.ReLU(),
             torch.nn.Dropout(
-                p=cfg.enc_dropout,
+                p=model_cfg['enc_dropout'],
             ),
             torch.nn.Linear(
-                in_features=cfg.enc_d_hid,
-                out_features=cfg.enc_d_hid,
+                in_features=model_cfg['enc_d_hid'],
+                out_features=model_cfg['enc_d_hid'],
             ),
             torch.nn.ReLU(),
             torch.nn.Dropout(
-                p=cfg.enc_dropout,
+                p=model_cfg['enc_dropout'],
             ),
         )
         self.hid = torch.nn.RNN(
-            input_size=cfg.enc_d_hid,
-            hidden_size=cfg.enc_d_hid,
-            num_layers=cfg.enc_n_layer,
+            input_size=model_cfg['enc_d_hid'],
+            hidden_size=model_cfg['enc_d_hid'],
+            num_layers=model_cfg['enc_n_layer'],
             batch_first=True,
-            dropout=cfg.enc_dropout * min(1, cfg.enc_n_layer - 1),
-            bidirectional=cfg.is_bidir,
+            dropout=model_cfg['enc_dropout'] * min(1, model_cfg['enc_n_layer'] - 1),
+            bidirectional=model_cfg['is_bidir'],
         )
 
     def forward(
@@ -59,82 +61,79 @@ class RNNEncModel(torch.nn.Module):
         # shape: (B, H * (is_bidir + 1))
         return out[torch.arange(out.size(0)).to(out.device), src_len]
 
-    def _forward_unimplemented(self):
-        pass
-
 
 class RNNDecModel(torch.nn.Module):
-    def __init__(self, cfg: RNNModelCfg):
+    def __init__(self, dec_tknzr_cfg: Dict, model_cfg: Dict):
         super().__init__()
         self.emb = torch.nn.Embedding(
-            num_embeddings=cfg.dec_n_vocab,
-            embedding_dim=cfg.dec_d_emb,
-            padding_idx=cfg.dec_pad_id,
+            num_embeddings=dec_tknzr_cfg['n_vocab'],
+            embedding_dim=model_cfg['dec_d_emb'],
+            padding_idx=0,
         )
         self.emb_to_hid = torch.nn.Sequential(
             torch.nn.Dropout(
-                p=cfg.dec_dropout,
+                p=model_cfg['dec_dropout'],
             ),
             torch.nn.Linear(
-                in_features=cfg.dec_d_emb,
-                out_features=cfg.dec_d_hid,
+                in_features=model_cfg['dec_d_emb'],
+                out_features=model_cfg['dec_d_hid'],
             ),
             torch.nn.ReLU(),
             torch.nn.Dropout(
-                p=cfg.dec_dropout,
+                p=model_cfg['dec_dropout'],
             ),
             torch.nn.Linear(
-                in_features=cfg.dec_d_hid,
-                out_features=cfg.dec_d_hid,
+                in_features=model_cfg['dec_d_hid'],
+                out_features=model_cfg['dec_d_hid'],
             ),
             torch.nn.ReLU(),
             torch.nn.Dropout(
-                p=cfg.dec_dropout,
+                p=model_cfg['dec_dropout'],
             ),
         )
         self.enc_to_hid = torch.nn.Sequential(
             torch.nn.Dropout(
-                p=cfg.dec_dropout,
+                p=model_cfg['dec_dropout'],
             ),
             torch.nn.Linear(
-                in_features=cfg.enc_d_hid,
-                out_features=cfg.dec_d_hid * cfg.dec_n_layer,
+                in_features=model_cfg['enc_d_hid'],
+                out_features=model_cfg['dec_d_hid'] * model_cfg['dec_n_layer'],
             ),
             torch.nn.ReLU(),
             torch.nn.Dropout(
-                p=cfg.dec_dropout,
+                p=model_cfg['dec_dropout'],
             ),
             torch.nn.Linear(
-                in_features=cfg.dec_d_hid * cfg.dec_n_layer,
-                out_features=cfg.dec_d_hid * cfg.dec_n_layer,
+                in_features=model_cfg['dec_d_hid'] * model_cfg['dec_n_layer'],
+                out_features=model_cfg['dec_d_hid'] * model_cfg['dec_n_layer'],
             ),
             torch.nn.ReLU(),
             torch.nn.Dropout(
-                p=cfg.dec_dropout,
+                p=model_cfg['dec_dropout'],
             ),
         )
         self.hid = torch.nn.RNN(
-            input_size=cfg.dec_d_hid,
-            hidden_size=cfg.dec_d_hid,
-            num_layers=cfg.dec_n_layer,
+            input_size=model_cfg['dec_d_hid'],
+            hidden_size=model_cfg['dec_d_hid'],
+            num_layers=model_cfg['dec_n_layer'],
             batch_first=True,
-            dropout=cfg.dec_dropout * min(1, cfg.dec_n_layer - 1),
+            dropout=model_cfg['dec_dropout'] * min(1, model_cfg['dec_n_layer'] - 1),
         )
         self.hid_to_emb = torch.nn.Sequential(
             torch.nn.Dropout(
-                p=cfg.dec_dropout,
+                p=model_cfg['dec_dropout'],
             ),
             torch.nn.Linear(
-                in_features=cfg.dec_d_hid,
-                out_features=cfg.dec_d_emb,
+                in_features=model_cfg['dec_d_hid'],
+                out_features=model_cfg['dec_d_hid'],
             ),
             torch.nn.ReLU(),
             torch.nn.Dropout(
-                p=cfg.dec_dropout,
+                p=model_cfg['dec_dropout'],
             ),
             torch.nn.Linear(
-                in_features=cfg.dec_d_emb,
-                out_features=cfg.dec_d_emb
+                in_features=model_cfg['dec_d_hid'],
+                out_features=model_cfg['dec_d_emb'],
             ),
         )
 
@@ -164,10 +163,23 @@ class RNNDecModel(torch.nn.Module):
 
 
 class RNNModel(torch.nn.Module):
-    def __init__(self, cfg: RNNModelCfg):
+    model_name = 'RNN'
+
+    def __init__(
+            self,
+            dec_tknzr_cfg: Dict,
+            enc_tknzr_cfg: Dict,
+            model_cfg: Dict,
+    ):
         super().__init__()
-        self.enc = RNNEncModel(cfg=cfg)
-        self.dec = RNNDecModel(cfg=cfg)
+        self.enc = RNNEncModel(
+            enc_tknzr_cfg=enc_tknzr_cfg,
+            model_cfg=model_cfg,
+        )
+        self.dec = RNNDecModel(
+            dec_tknzr_cfg=dec_tknzr_cfg,
+            model_cfg=model_cfg,
+        )
 
     def forward(
             self,
@@ -177,9 +189,6 @@ class RNNModel(torch.nn.Module):
     ) -> torch.Tensor:
         # shape: (B, S, E)
         return self.dec(self.enc(src=src, src_len=src_len), tgt=tgt)
-
-    def _forward_unimplemented(self):
-        pass
 
     def predict(
             self,
@@ -196,3 +205,59 @@ class RNNModel(torch.nn.Module):
             torch.arange(logits.size(0)).to(logits.device),
             tgt_len
         ].argmax(dim=-1)
+
+    @classmethod
+    def update_subparser(cls, subparser: argparse.ArgumentParser):
+        subparser.add_argument(
+            '--dec_d_emb',
+            help='Decoder embedding dimension.',
+            required=True,
+            type=int,
+        )
+        subparser.add_argument(
+            '--dec_d_hid',
+            help='Decoder hidden dimension.',
+            required=True,
+            type=int,
+        )
+        subparser.add_argument(
+            '--dec_dropout',
+            help='Decoder dropout rate.',
+            required=True,
+            type=float,
+        )
+        subparser.add_argument(
+            '--dec_n_layer',
+            help=f'Number of decoder {cls.model_name} layer(s).',
+            required=True,
+            type=int,
+        )
+        subparser.add_argument(
+            '--enc_d_emb',
+            help='Encoder embedding dimension.',
+            required=True,
+            type=int,
+        )
+        subparser.add_argument(
+            '--enc_d_hid',
+            help='Encoder hidden dimension.',
+            required=True,
+            type=int,
+        )
+        subparser.add_argument(
+            '--enc_dropout',
+            help='Encoder dropout rate.',
+            required=True,
+            type=float,
+        )
+        subparser.add_argument(
+            '--enc_n_layer',
+            help=f'Number of encoder {cls.model_name} layer(s).',
+            required=True,
+            type=int,
+        )
+        subparser.add_argument(
+            '--is_bidir',
+            help=f'Whether to use bidirectional {cls.model_name} encoder or not.',
+            action='store_true',
+        )

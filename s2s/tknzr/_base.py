@@ -16,14 +16,14 @@ class BaseTknzr(abc.ABC):
     file_name = 'tknzr.json'
     tknzr_name = 'base'
 
-    def __init__(self, **kwargs):
-        self.is_cased = kwargs['is_cased']
-        self.min_count = kwargs['min_count']
-        self.n_vocab = kwargs['n_vocab']
-        self.bos_tk = self.preprocess(kwargs['bos_tk'])
-        self.eos_tk = self.preprocess(kwargs['eos_tk'])
-        self.pad_tk = self.preprocess(kwargs['pad_tk'])
-        self.unk_tk = self.preprocess(kwargs['unk_tk'])
+    def __init__(self, cfg: Dict):
+        self.is_cased = cfg['is_cased']
+        self.min_count = cfg['min_count']
+        self.n_vocab = cfg['n_vocab']
+        self.bos_tk = '[bos]'
+        self.eos_tk = '[eos]'
+        self.pad_tk = '[pad]'
+        self.unk_tk = '[unk]'
         self.tk2id = {}
         self.id2tk = {}
 
@@ -100,7 +100,7 @@ class BaseTknzr(abc.ABC):
         if not os.path.exists(file_path):
             raise FileNotFoundError(f'{file_path} does not exist.')
 
-        self = cls(**cfg)
+        self = cls(cfg=cfg)
         with open(file_path, 'r', encoding='utf-8') as tknzr_file:
             self.tk2id = json.load(tknzr_file)
         self.id2tk = {tk_id: tk for tk, tk_id in self.tk2id.items()}

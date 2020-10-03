@@ -19,3 +19,4 @@ PROJECT_ROOT = os.path.abspath(os.path.join(
 ))
 DATA_PATH = os.path.join(PROJECT_ROOT, 'data')
 EXP_PATH = os.path.join(PROJECT_ROOT, 'exp')
+CFG_NAME = 'cfg.json'

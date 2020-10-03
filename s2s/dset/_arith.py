@@ -1,7 +1,6 @@
 import os
 
 from typing import Sequence
-from typing import Tuple
 
 import pandas as pd
 from sklearn.metrics import accuracy_score
@@ -22,12 +21,6 @@ class ArithDset(BaseDset):
         self.tgt.extend(
             df['tgt'].apply(str).apply(
                 self.__class__.preprocess).to_list())
-
-    def __len__(self) -> int:
-        return len(self.tgt)
-
-    def __getitem__(self, index: int) -> Tuple[str, str]:
-        return self.src[index], self.tgt[index]
 
     @staticmethod
     def eval(tgt: str, pred: str) -> float:

@@ -1,7 +1,5 @@
 import argparse
 
-from typing import Tuple
-
 from s2s.dset import DSET_OPTS
 from s2s.tknzr import TKNZR_OPTS
 from s2s.util import save_cfg
@@ -56,30 +54,6 @@ def parse_arg() -> argparse.Namespace:
         required=True,
         type=int,
     )
-    parser.add_argument(
-        '--bos_tk',
-        help='',
-        default='[bos]',
-        type=str,
-    )
-    parser.add_argument(
-        '--eos_tk',
-        help='',
-        default='[eos]',
-        type=str,
-    )
-    parser.add_argument(
-        '--pad_tk',
-        help='',
-        default='[pad]',
-        type=str,
-    )
-    parser.add_argument(
-        '--unk_tk',
-        help='',
-        default='[unk]',
-        type=str,
-    )
 
     return parser.parse_args()
 
@@ -93,7 +67,7 @@ def main():
     args.dset_name.sort()
 
     # Create new tokenizer.
-    tknzr = TKNZR_OPTS[args.tknzr_name](**args.__dict__)
+    tknzr = TKNZR_OPTS[args.tknzr_name](cfg=args.__dict__)
 
     # Build tokenizer vocabulary.
     for dset_name in args.dset_name:
@@ -104,7 +78,7 @@ def main():
             tknzr.build_vocab(dset.all_tgt())
 
     # Save tokenizer and its configuration.
-    save_cfg(cfg=args.__dict__, exp_name=args.exp_name, file_name='cfg.json')
+    save_cfg(cfg=args.__dict__, exp_name=args.exp_name)
     tknzr.save(exp_name=args.exp_name)
 
 
