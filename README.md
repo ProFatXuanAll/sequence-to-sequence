@@ -30,8 +30,8 @@ python run_train_tknzr.py character --exp_name 'tgt_tknzr' --dset_name 'arithmet
 
 ```sh
 python run_train_model.py RNN \
-  --batch_size 32 \
-  --ckpt_step 1000 \
+  --batch_size 512 \
+  --ckpt_step 2000 \
   --dec_d_emb 100 \
   --dec_d_hid 300 \
   --dec_dropout 0.1 \
@@ -48,8 +48,29 @@ python run_train_model.py RNN \
   --epoch 10 \
   --exp_name 'test' \
   --is_bidir \
-  --log_step 500 \
+  --log_step 1000 \
   --lr 1e-4 \
   --max_norm 1.0 \
   --seed 42
+```
+
+## Evaluate Model
+
+```sh
+python run_eval_model.py \
+  --batch_size 1024 \
+  --ckpt -1 \
+  --dset_name 'arithmetic' \
+  --exp_name 'test' \
+  --infr_name 'top_1'
+```
+
+## Infer Model
+
+```sh
+python run_infr_model.py \
+  --ckpt -1 \
+  --exp_name 'test' \
+  --infr_name 'top_1' \
+  --src '1+1='
 ```

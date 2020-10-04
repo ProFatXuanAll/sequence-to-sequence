@@ -16,11 +16,11 @@ class ArithDset(BaseDset):
         super().__init__()
         df = pd.read_csv(os.path.join(DATA_PATH, 'arithmetic.csv'))
         self.src.extend(
-            df['src'].apply(str).apply(
-                self.__class__.preprocess).to_list())
+            df['src'].apply(str).apply(self.__class__.preprocess).to_list()
+        )
         self.tgt.extend(
-            df['tgt'].apply(str).apply(
-                self.__class__.preprocess).to_list())
+            df['tgt'].apply(str).apply(self.__class__.preprocess).to_list()
+        )
 
     @staticmethod
     def eval(tgt: str, pred: str) -> float:
@@ -29,6 +29,6 @@ class ArithDset(BaseDset):
     @staticmethod
     def batch_eval(
             batch_tgt: Sequence[str],
-            batch_pred: Sequence[str]
+            batch_pred: Sequence[str],
     ) -> float:
         return accuracy_score(batch_tgt, batch_pred)

@@ -187,29 +187,10 @@ class RNNModel(torch.nn.Module):
             src: torch.Tensor,
             src_len: torch.Tensor,
             tgt: torch.Tensor,
-            *pos,
             **kwargs,
     ) -> torch.Tensor:
-        # shape: (B, S, E)
+        # shape: (B, S, V)
         return self.dec(self.enc(src=src, src_len=src_len), tgt=tgt)
-
-    def predict(
-            self,
-            src: torch.Tensor,
-            src_len: torch.Tensor,
-            tgt: torch.Tensor,
-            tgt_len: torch.Tensor,
-            *pos,
-            **kwargs,
-    ):
-        # shape: (B, S, E)
-        logits = self(src=src, src_len=src_len, tgt=tgt)
-
-        # shape: (B)
-        return logits[
-            torch.arange(logits.size(0)).to(logits.device),
-            tgt_len - 1
-        ].argmax(dim=-1)
 
     @classmethod
     def update_subparser(cls, subparser: argparse.ArgumentParser):

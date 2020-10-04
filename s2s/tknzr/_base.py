@@ -66,7 +66,16 @@ class BaseTknzr(abc.ABC):
 
     def dec(self, tk_ids: Sequence[int]) -> str:
         r"""Decode text."""
-        return self.dtknz(tks=[self.id2tk[tk_id] for tk_id in tk_ids])
+        tks = [
+            self.id2tk[tk_id]
+            for tk_id in tk_ids
+            if tk_id not in [
+                self.tk2id[self.bos_tk],
+                self.tk2id[self.eos_tk],
+                self.tk2id[self.pad_tk],
+            ]
+        ]
+        return self.dtknz(tks=tks)
 
     def batch_enc(
             self,

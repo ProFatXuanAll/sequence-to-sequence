@@ -118,15 +118,15 @@ def main():
     # Control random seed.
     set_seed(args.seed)
 
-    # Load encoder tokenizer.
+    # Load encoder tokenizer and its configuration.
     enc_tknzr_cfg = load_cfg(exp_name=args.enc_tknzr_exp)
     enc_tknzr = TKNZR_OPTS[enc_tknzr_cfg['tknzr_name']].load(cfg=enc_tknzr_cfg)
 
-    # Load decoder tokenizer.
+    # Load decoder tokenizer and its configuration.
     dec_tknzr_cfg = load_cfg(exp_name=args.dec_tknzr_exp)
     dec_tknzr = TKNZR_OPTS[dec_tknzr_cfg['tknzr_name']].load(cfg=dec_tknzr_cfg)
 
-    # Load datset and create dataloader.
+    # Load training datset and create dataloader.
     dset = DSET_OPTS[args.dset_name]()
     dldr = torch.utils.data.DataLoader(
         dataset=dset,
@@ -134,7 +134,7 @@ def main():
         shuffle=True,
     )
 
-    # Get CUDA device.
+    # Get model running device.
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda')
@@ -145,6 +145,7 @@ def main():
         enc_tknzr_cfg=enc_tknzr_cfg,
         model_cfg=args.__dict__,
     )
+    model.train()
     model = model.to(device)
 
     # Create optimizer.
@@ -177,7 +178,10 @@ def main():
     total_loss = 0.0
 
     for cur_epoch in range(args.epoch):
-        tqdm_dldr = tqdm(dldr, desc=f'epoch: {cur_epoch}, loss: {0:.6f}')
+        tqdm_dldr = tqdm(
+            dldr,
+            desc=f'epoch: {cur_epoch}, loss: {total_loss:.6f}'
+        )
         for batch in tqdm_dldr:
             src, src_len = enc_tknzr.batch_enc(
                 batch_text=batch[0],
@@ -206,8 +210,8 @@ def main():
                 tgt[:, 1:].reshape(-1),
             )
 
-            # Calculate average loss.
-            total_loss += loss.item()
+            # Accumulate loss.
+            total_loss += loss.item() / args.ckpt_step
 
             # Backward pass.
             loss.backward()
@@ -227,9 +231,6 @@ def main():
             # Increment global step.
             step += 1
 
-            # Log loss on CLI.
-            tqdm_dldr.set_description(f'epoch: {cur_epoch}, loss: {0:.6f}')
-
             # Save checkpoint for each `ckpt_step`.
             if step % args.ckpt_step == 0:
                 torch.save(
@@ -238,8 +239,15 @@ def main():
                 )
 
             if step % args.log_step == 0:
-                # Log average loss.
-                writer.add_scalar('loss', total_loss / args.ckpt_step, step)
+                # Log average loss on CLI.
+                tqdm_dldr.set_description(
+                    f'epoch: {cur_epoch}, loss: {total_loss:.6f}'
+                )
+
+                # Log average loss on tensorboard.
+                writer.add_scalar('loss', total_loss, step)
+
+                # Clean up average loss.
                 total_loss = 0.0
 
     # Save last checkpoint.

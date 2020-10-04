@@ -40,11 +40,11 @@ def parse_arg() -> argparse.Namespace:
     parser.add_argument(
         '--is_cased',
         action='store_true',
-        help='',
+        help='Whether to convert all upper cases letter into lower cases.',
     )
     parser.add_argument(
         '--min_count',
-        help='',
+        help='Minimum frequency for tokens to be in vocabulary.',
         required=True,
         type=int,
     )

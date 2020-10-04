@@ -1,7 +1,9 @@
+import abc
 import re
 import unicodedata
 import torch
 
+from typing import Sequence
 from typing import Tuple
 
 
@@ -25,3 +27,16 @@ class BaseDset(torch.utils.data.Dataset):
     @classmethod
     def preprocess(cls, text: str) -> str:
         return re.sub(r'\s+', ' ', unicodedata.normalize('NFKC', text)).strip()
+
+    @staticmethod
+    @abc.abstractmethod
+    def eval(tgt: str, pred: str) -> float:
+        raise NotImplementedError
+
+    @staticmethod
+    @abc.abstractmethod
+    def batch_eval(
+            batch_tgt: Sequence[str],
+            batch_pred: Sequence[str],
+    ) -> float:
+        raise NotImplementedError
