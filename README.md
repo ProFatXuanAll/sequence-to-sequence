@@ -17,41 +17,53 @@ pipenv install
 ### Train Source Text Tokenizer
 
 ```sh
-python run_train_tknzr.py character --exp_name 'src_tknzr' --dset_name 'arithmetic.src' --min_count 1 --n_vocab 50 --is_cased
+python run_train_tknzr.py \
+character \
+--exp_name 'src_tknzr' \
+--dset_name 'arithmetic.src' \
+--min_count 1 \
+--n_vocab 20 \
+--is_cased
 ```
 
 ### Train Target Text Tokenizer
 
 ```sh
-python run_train_tknzr.py character --exp_name 'tgt_tknzr' --dset_name 'arithmetic.tgt' --min_count 1 --n_vocab 50 --is_cased
+python run_train_tknzr.py \
+character \
+--exp_name 'tgt_tknzr' \
+--dset_name 'arithmetic.tgt' \
+--min_count 1 \
+--n_vocab 15 \
+--is_cased
 ```
 
 ## Train Model
 
 ```sh
-python run_train_model.py RNN \
-  --batch_size 512 \
-  --ckpt_step 2000 \
-  --dec_d_emb 100 \
-  --dec_d_hid 300 \
-  --dec_dropout 0.1 \
-  --dec_n_layer 2 \
-  --dec_max_len 20 \
-  --dec_tknzr_exp 'tgt_tknzr' \
-  --dset_name 'arithmetic' \
-  --enc_d_emb 100 \
-  --enc_d_hid 300 \
-  --enc_dropout 0.1 \
-  --enc_n_layer 2 \
-  --enc_max_len 30 \
-  --enc_tknzr_exp 'src_tknzr' \
-  --epoch 10 \
-  --exp_name 'test' \
-  --is_bidir \
-  --log_step 1000 \
-  --lr 1e-4 \
-  --max_norm 1.0 \
-  --seed 42
+python run_train_model.py \
+GRU \
+--batch_size 2048 \
+--ckpt_step 5000 \
+--dec_d_emb 20 \
+--dec_d_hid 40 \
+--dec_dropout 0.0 \
+--dec_n_layer 1 \
+--dec_max_len 7 \
+--dec_tknzr_exp 'tgt_tknzr' \
+--dset_name 'arithmetic' \
+--enc_d_emb 20 \
+--enc_d_hid 40 \
+--enc_dropout 0.0 \
+--enc_n_layer 1 \
+--enc_max_len 12 \
+--enc_tknzr_exp 'src_tknzr' \
+--epoch 100 \
+--exp_name 'gru' \
+--log_step 2500 \
+--lr 5e-4 \
+--max_norm 1.0 \
+--seed 42
 ```
 
 ## Evaluate Model

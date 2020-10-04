@@ -176,11 +176,12 @@ def main():
 
     # Log average loss.
     total_loss = 0.0
+    pre_total_loss = 0.0
 
     for cur_epoch in range(args.epoch):
         tqdm_dldr = tqdm(
             dldr,
-            desc=f'epoch: {cur_epoch}, loss: {total_loss:.6f}'
+            desc=f'epoch: {cur_epoch}, loss: {pre_total_loss:.6f}'
         )
         for batch in tqdm_dldr:
             src, src_len = enc_tknzr.batch_enc(
@@ -248,6 +249,7 @@ def main():
                 writer.add_scalar('loss', total_loss, step)
 
                 # Clean up average loss.
+                pre_total_loss = total_loss
                 total_loss = 0.0
 
     # Save last checkpoint.
