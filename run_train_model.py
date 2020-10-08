@@ -192,6 +192,7 @@ def main():
                 batch_text=batch[1],
                 max_len=args.dec_max_len,
             )
+
             src = torch.tensor(src).to(device)
             src_len = torch.tensor(src_len).to(device)
             tgt = torch.tensor(tgt).to(device)
@@ -212,7 +213,7 @@ def main():
             )
 
             # Accumulate loss.
-            total_loss += loss.item() / args.ckpt_step
+            total_loss += loss.item() / args.log_step
 
             # Backward pass.
             loss.backward()
@@ -238,7 +239,6 @@ def main():
                     model.state_dict(),
                     os.path.join(exp_path, f'model-{step}.pt'),
                 )
-
             if step % args.log_step == 0:
                 # Log average loss on CLI.
                 tqdm_dldr.set_description(
