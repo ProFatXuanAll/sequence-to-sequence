@@ -212,7 +212,7 @@ def main():
             )
 
             # Accumulate loss.
-            total_loss += loss.item() / args.ckpt_step
+            total_loss += loss.item() / args.log_step
 
             # Backward pass.
             loss.backward()
