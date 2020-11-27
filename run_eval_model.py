@@ -124,6 +124,10 @@ def main():
         batch_tgt=dset.all_tgt(),
         batch_pred=all_pred,
     ))
+    print(DSET_OPTS[args.dset_name].bleu_score(
+        batch_tgt=dset.all_tgt(),
+        batch_pred=all_pred,
+    ))
 
 
 if __name__ == '__main__':
