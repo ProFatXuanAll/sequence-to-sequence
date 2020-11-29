@@ -14,6 +14,7 @@ numpy = "1.19.2"
 tqdm = "4.49.0"
 sklearn = "0.0"
 tensorboard = "2.3.0"
+nltk = "3.2.4"
 
 [requires]
 python_version = "3.8"
