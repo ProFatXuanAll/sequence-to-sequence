@@ -1,35 +1,43 @@
 import argparse
+import os
+
+import torch
+import torch.utils.tensorboard
+
+from tqdm import tqdm
 
 from s2s.dset import DSET_OPTS
+from s2s.infr import INFR_OPTS
+from s2s.model import MODEL_OPTS
+from s2s.path import EXP_PATH
 from s2s.tknzr import TKNZR_OPTS
-from s2s.util import save_cfg
+from s2s.util import load_cfg, load_model_from_ckpt, set_seed
 
 
 def parse_arg() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog='python run_train_tknzr.py',
-        description='Train tokenizer.',
+        prog='python run_eval_model.py',
+        description='Evaluate sequence-to-sequence model.',
     )
 
-    dset_choices = []
-    for dset_name in DSET_OPTS:
-        dset_choices.extend([
-            f'{dset_name}.src',
-            f'{dset_name}.tgt',
-        ])
-
     parser.add_argument(
-        'tknzr_name',
-        choices=TKNZR_OPTS.keys(),
-        help='Tokenizer name',
-        type=str,
+        '--batch_size',
+        help='Evaluation batch size.',
+        required=True,
+        type=int,
+    )
+    parser.add_argument(
+        '--ckpt',
+        help='Checkpoint to evaluate.',
+        required=True,
+        type=int,
     )
     parser.add_argument(
         '--dset_name',
-        choices=dset_choices,
-        help='Name(s) of the dataset(s) to train tokenizer.',
-        nargs='+',
+        choices=DSET_OPTS.keys(),
+        help='Name of the dataset to evaluate model.',
         required=True,
+        type=str,
     )
     parser.add_argument(
         '--exp_name',
@@ -38,48 +46,84 @@ def parse_arg() -> argparse.Namespace:
         type=str,
     )
     parser.add_argument(
-        '--is_cased',
-        action='store_true',
-        help='Whether to convert all upper cases letter into lower cases.',
-    )
-    parser.add_argument(
-        '--min_count',
-        help='Minimum frequency for tokens to be in vocabulary.',
+        '--infr_name',
+        choices=INFR_OPTS.keys(),
+        help='Inference method.',
         required=True,
-        type=int,
-    )
-    parser.add_argument(
-        '--n_vocab',
-        help='Tokenizer vocabulary size.',
-        required=True,
-        type=int,
+        type=str,
     )
 
     return parser.parse_args()
 
 
+@torch.no_grad()
 def main():
     r"""Main function."""
     # Load command line arguments.
     args = parse_arg()
 
-    # Sort dataset list for readability.
-    args.dset_name.sort()
+    # Load model configuration.
+    model_cfg = load_cfg(exp_name=args.exp_name)
 
-    # Create tokenizer.
-    tknzr = TKNZR_OPTS[args.tknzr_name](cfg=args.__dict__)
+    # Control random seed.
+    set_seed(model_cfg['seed'])
 
-    # Build tokenizer vocabulary.
-    for dset_name in args.dset_name:
-        dset = DSET_OPTS[dset_name[:-4]]()
-        if '.src' in dset_name:
-            tknzr.build_vocab(dset.all_src())
-        if '.tgt' in dset_name:
-            tknzr.build_vocab(dset.all_tgt())
+    # Load encoder tokenizer and its configuration.
+    enc_tknzr_cfg = load_cfg(exp_name=model_cfg['enc_tknzr_exp'])
+    enc_tknzr = TKNZR_OPTS[enc_tknzr_cfg['tknzr_name']].load(cfg=enc_tknzr_cfg)
 
-    # Save tokenizer and its configuration.
-    save_cfg(cfg=args.__dict__, exp_name=args.exp_name)
-    tknzr.save(exp_name=args.exp_name)
+    # Load decoder tokenizer and its configuration.
+    dec_tknzr_cfg = load_cfg(exp_name=model_cfg['dec_tknzr_exp'])
+    dec_tknzr = TKNZR_OPTS[dec_tknzr_cfg['tknzr_name']].load(cfg=dec_tknzr_cfg)
+
+    # Load evaluation datset and create dataloader.
+    dset = DSET_OPTS[args.dset_name]()
+    dldr = torch.utils.data.DataLoader(
+        dataset=dset,
+        batch_size=args.batch_size,
+        shuffle=False,
+    )
+
+    # Get model running device.
+    device = torch.device('cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+
+    # Load model.
+    model = MODEL_OPTS[model_cfg['model_name']](
+        dec_tknzr_cfg=dec_tknzr_cfg,
+        enc_tknzr_cfg=enc_tknzr_cfg,
+        model_cfg=model_cfg,
+    )
+    model = load_model_from_ckpt(
+        ckpt=args.ckpt,
+        exp_name=args.exp_name,
+        model=model,
+    )
+    model.eval()
+    model = model.to(device)
+
+    # Load inference method.
+    infr = INFR_OPTS[args.infr_name](**args.__dict__)
+
+    # Record batch inference result.
+    all_pred = []
+    for batch in tqdm(dldr):
+        all_pred.extend(infr.gen(
+            batch_text=batch[0],
+            dec_max_len=model_cfg['dec_max_len'],
+            dec_tknzr=dec_tknzr,
+            device=device,
+            enc_max_len=model_cfg['enc_max_len'],
+            enc_tknzr=enc_tknzr,
+            model=model,
+        ))
+
+    # Output all dataset result.
+    print(DSET_OPTS[args.dset_name].batch_eval(
+        batch_tgt=dset.all_tgt(),
+        batch_pred=all_pred,
+    ))
 
 
 if __name__ == '__main__':
