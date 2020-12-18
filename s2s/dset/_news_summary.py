@@ -34,7 +34,7 @@ class NewsSummaryDset(BaseDset):
 
     @staticmethod
     def eval(tgt: str, pred: str) -> float:
-        return return nltk.translate.bleu_score.sentence_bleu(
+        return nltk.translate.bleu_score.sentence_bleu(
             [pred],
             tgt
         )

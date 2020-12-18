@@ -4,6 +4,82 @@ from typing import Dict
 
 import torch
 
+class AttnRNNBlock(torch.nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers):
+        super().__init__()
+        self.num_layers = num_layers
+        self.hidden_size = hidden_size
+        self.input_size = input_size
+
+        self.hid = torch.nn.ModuleList(
+            [
+                torch.nn.RNN(
+                    input_size=input_size,
+                    hidden_size=hidden_size,
+                    num_layers=1,
+                    batch_first=True,
+                ) for _ in range(num_layers)
+            ]
+        )
+        self.W = torch.nn.Linear(
+            in_features=hidden_size,
+            out_features=hidden_size
+        )
+    def get_num_layers(self):
+        return self.num_layers
+
+    def get_hidden_size(self):
+        return self.hidden_size
+
+    def forward(self, enc_out, first_hid_tgt, last_enc_hidden):
+        r"""AttnRNNBlock forward
+
+        first_hid_tgt.shape == (B, S-1, H)
+        first_hid_tgt.dtype == torch.float
+        last_enc_hidden.shape == (num_layer, B, H)
+        last_enc_hidden.dtype == torch.float
+        enc_out.shape == (B, S, H)
+        enc_out.dtype == torch.float
+        """
+
+        hid_tgt = first_hid_tgt
+
+        for RNN_index in range(len(self.hid)):
+            # Initialize RNN hidden state.
+            # dec_hidden.shape == (1, B, H)
+            dec_hidden = last_enc_hidden[RNN_index].unsqueeze(dim=0)
+            
+            # To keep RNN output for each time step.
+            dec_out = None
+
+            for i in range(hid_tgt.size(-2)):
+                # Calculate attention weight.
+                # score.shape == (B, 1, S)
+                score = dec_hidden.transpose(0, 1) @ enc_out.transpose(-1, -2)
+                score = torch.nn.functional.softmax(score, dim=-1)
+                
+                # Encoder output multiply their weight.
+                # attn_enc.shape == (B, S, H)
+                attn_enc = enc_out * score.transpose(-1, -2)
+
+                # Sum each time step Encoder output.
+                # attn_enc.shape == (B, H)
+                attn_enc = torch.sum(attn_enc, dim=1)
+
+                # dec_input.shape == (B, 1, H)
+                dec_input = (hid_tgt[:, i, :] + self.W(attn_enc)).unsqueeze(dim=1)
+
+                # Feed into RNN.
+                out, dec_hidden = self.hid[RNN_index](dec_input, dec_hidden)
+
+                if dec_out == None:
+                    dec_out = out
+                else:
+                    dec_out = torch.cat((dec_out, out), dim=1)
+
+            hid_tgt = dec_out
+        return dec_out
+
 class AttnRNNEncModel(torch.nn.Module):
     def __init__(self, enc_tknzr_cfg: Dict, model_cfg: Dict):
         super().__init__()
@@ -111,15 +187,10 @@ class AttnRNNDecModel(torch.nn.Module):
                 p=model_cfg['dec_dropout'],
             ),
         )
-        self.hid = torch.nn.ModuleList(
-            [
-                torch.nn.RNN(
-                    input_size=model_cfg['dec_d_hid'],
-                    hidden_size=model_cfg['dec_d_hid'],
-                    num_layers=1,
-                    batch_first=True,
-                ) for _ in range(model_cfg['dec_n_layer'])
-            ]
+        self.hid = AttnRNNBlock(
+            input_size=model_cfg['dec_d_hid'],
+            hidden_size=model_cfg['dec_d_hid'],
+            num_layers=model_cfg['dec_n_layer']
         )
         self.hid_to_emb = torch.nn.Sequential(
             torch.nn.Dropout(
@@ -156,51 +227,23 @@ class AttnRNNDecModel(torch.nn.Module):
         """
         # last_enc_hidden.shape == (num_layer, B, H)
         last_enc_hidden = self.enc_to_hid(enc_hid).reshape(
-                len(self.hid),
+                self.hid.get_num_layers(),
                 -1,
-                self.hid[0].hidden_size
+                self.hid.get_hidden_size()
         )
 
         # hid_tgt.shape == (B, S-1, H)
         hid_tgt = self.emb_to_hid(self.emb(tgt))
 
-        for RNN_index in range(len(self.hid)):
-            # Initialize RNN hidden state.
-            # dec_hidden.shape == (1, B, H)
-            dec_hidden = last_enc_hidden[RNN_index].unsqueeze(dim=0)
-            
-            # To keep RNN output for each time step.
-            dec_out = None
+        # dec_out.shape == (B, S-1, H)
+        dec_out = self.hid(
+            enc_out=enc_out,
+            first_hid_tgt=hid_tgt,
+            last_enc_hidden=last_enc_hidden 
+        )
 
-            for i in range(hid_tgt.size(-2)):
-                # Calculate attention weight.
-                # score.shape == (B, 1, S)
-                score = dec_hidden.transpose(0, 1) @ enc_out.transpose(-1, -2)
-                score = torch.nn.functional.softmax(score, dim=-1)
-                
-                # Encoder output multiply their weight.
-                # attn_enc.shape == (B, S, H)
-                attn_enc = enc_out * score.transpose(-1, -2)
-
-                # Sum each time step Encoder output.
-                # attn_enc.shape == (B, H)
-                attn_enc = torch.sum(attn_enc, dim=1)
-
-                # dec_input.shape == (B, 1, H)
-                dec_input = (hid_tgt[:, i, :] + attn_enc).unsqueeze(dim=1)
-
-                # Feed into RNN.
-                out, dec_hidden = self.hid[RNN_index](dec_input, dec_hidden)
-
-                if dec_out == None:
-                    dec_out = out
-                else:
-                    dec_out = torch.cat((dec_out, out), dim=1)
-            hid_tgt = dec_out
-
-        # shape: (B, S, V)
+        # shape: (B, S-1, V)
         return self.hid_to_emb(dec_out) @ self.emb.weight.transpose(0, 1)
-
 
 class AttnRNNModel(torch.nn.Module):
     model_name = 'RNN_attention'

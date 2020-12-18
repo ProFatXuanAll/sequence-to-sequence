@@ -3,9 +3,9 @@ from typing import Dict, Type, Union
 from s2s.model._gru import GRUDecModel, GRUEncModel, GRUModel
 from s2s.model._lstm import LSTMDecModel, LSTMEncModel, LSTMModel
 from s2s.model._rnn import RNNDecModel, RNNEncModel, RNNModel
-from s2s.model._gru_attention import AttnGRUDecModel, AttnGRUEncModel, AttnGRUModel
-from s2s.model._lstm_attention import AttnLSTMDecModel, AttnLSTMEncModel, AttnLSTMModel
-from s2s.model._rnn_attention import AttnRNNDecModel, AttnRNNEncModel, AttnRNNModel
+from s2s.model._gru_attention import AttnGRUDecModel, AttnGRUEncModel, AttnGRUModel, AttnGRUBlock
+from s2s.model._lstm_attention import AttnLSTMDecModel, AttnLSTMEncModel, AttnLSTMModel, AttnLSTMBlock
+from s2s.model._rnn_attention import AttnRNNDecModel, AttnRNNEncModel, AttnRNNModel, AttnRNNBlock
 
 
 Model = Union[
