@@ -136,7 +136,7 @@ class AttnLSTMDecModel(AttnRNNDecModel):
             last_enc_hidden=last_enc_hidden
         )
 
-        # shape: (B, S, V)
+        # shape: (B, S-1, V)
         return self.hid_to_emb(dec_out) @ self.emb.weight.transpose(0, 1)
 
 class AttnLSTMModel(AttnRNNModel):
