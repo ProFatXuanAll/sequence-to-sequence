@@ -1,4 +1,5 @@
 import abc
+import argparse
 import json
 import os
 import re
@@ -17,10 +18,10 @@ class BaseTknzr(abc.ABC):
     file_name = 'tknzr.json'
     tknzr_name = 'base'
 
-    def __init__(self, cfg: Dict):
-        self.is_cased = cfg['is_cased']
-        self.min_count = cfg['min_count']
-        self.n_vocab = cfg['n_vocab']
+    def __init__(self, cfg: argparse.Namespace):
+        self.is_cased = cfg.is_cased
+        self.min_count = cfg.min_count
+        self.n_vocab = cfg.n_vocab
         self.bos_tk = '[bos]'
         self.eos_tk = '[eos]'
         self.pad_tk = '[pad]'
@@ -140,8 +141,8 @@ class BaseTknzr(abc.ABC):
             json.dump(self.tk2id, tknzr_file, ensure_ascii=False, indent=2)
 
     @classmethod
-    def load(cls, cfg: Dict) -> 'BaseTknzr':
-        file_path = os.path.join(EXP_PATH, cfg['exp_name'], cls.file_name)
+    def load(cls, cfg: argparse.Namespace) -> 'BaseTknzr':
+        file_path = os.path.join(EXP_PATH, cfg.exp_name, cls.file_name)
 
         if not os.path.exists(file_path):
             raise FileNotFoundError(f'{file_path} does not exist.')

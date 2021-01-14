@@ -120,11 +120,11 @@ def main():
 
     # Load encoder tokenizer and its configuration.
     enc_tknzr_cfg = load_cfg(exp_name=args.enc_tknzr_exp)
-    enc_tknzr = TKNZR_OPTS[enc_tknzr_cfg['tknzr_name']].load(cfg=enc_tknzr_cfg)
+    enc_tknzr = TKNZR_OPTS[enc_tknzr_cfg.tknzr_name].load(cfg=enc_tknzr_cfg)
 
     # Load decoder tokenizer and its configuration.
     dec_tknzr_cfg = load_cfg(exp_name=args.dec_tknzr_exp)
-    dec_tknzr = TKNZR_OPTS[dec_tknzr_cfg['tknzr_name']].load(cfg=dec_tknzr_cfg)
+    dec_tknzr = TKNZR_OPTS[dec_tknzr_cfg.tknzr_name].load(cfg=dec_tknzr_cfg)
 
     # Load training datset and create dataloader.
     dset = DSET_OPTS[args.dset_name]()
@@ -143,7 +143,7 @@ def main():
     model = MODEL_OPTS[args.model_name](
         dec_tknzr_cfg=dec_tknzr_cfg,
         enc_tknzr_cfg=enc_tknzr_cfg,
-        model_cfg=args.__dict__,
+        model_cfg=args,
     )
     model.train()
     model = model.to(device)
@@ -207,7 +207,7 @@ def main():
 
             # Calculate loss.
             loss = objtv(
-                logits.reshape(-1, dec_tknzr_cfg['n_vocab']),
+                logits.reshape(-1, dec_tknzr_cfg.n_vocab),
                 tgt[:, 1:].reshape(-1),
             )
 

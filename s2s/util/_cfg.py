@@ -24,11 +24,11 @@ def save_cfg(cfg: Dict, exp_name: str) -> None:
         )
 
 
-def load_cfg(exp_name: str) -> Dict:
+def load_cfg(exp_name: str) -> argparse.Namespace:
     file_path = os.path.join(EXP_PATH, exp_name, CFG_NAME)
 
     if not os.path.exists(file_path):
         raise FileNotFoundError(f'{file_path} does not exist.')
 
     with open(file_path, 'r', encoding='utf-8') as input_file:
-        return json.load(input_file)
+        return argparse.Namespace(**json.load(input_file))
