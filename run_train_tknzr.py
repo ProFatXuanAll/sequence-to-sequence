@@ -67,7 +67,7 @@ def main():
     args.dset_name.sort()
 
     # Create tokenizer.
-    tknzr = TKNZR_OPTS[args.tknzr_name](cfg=args.__dict__)
+    tknzr = TKNZR_OPTS[args.tknzr_name](cfg=args)
 
     # Build tokenizer vocabulary.
     for dset_name in args.dset_name:

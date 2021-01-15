@@ -33,20 +33,13 @@ class NewsSummaryDset(BaseDset):
         return sample.encode('iso-8859-1').decode('utf8', 'ignore')
 
     @staticmethod
-    def eval(tgt: str, pred: str) -> float:
-        return nltk.translate.bleu_score.sentence_bleu(
-            [pred],
-            tgt
-        )
-
-
-    @staticmethod
     def batch_eval(
             batch_tgt: Sequence[str],
             batch_pred: Sequence[str],
     ) -> float:
+        batch_tgt = [[k for k in i] for i in batch_tgt]
+        batch_pred = [[[k for k in i]] for i in batch_pred]
         return nltk.translate.bleu_score.corpus_bleu(
             batch_pred,
             batch_tgt
         )
-
