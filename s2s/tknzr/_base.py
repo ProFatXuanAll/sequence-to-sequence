@@ -6,7 +6,6 @@ import re
 import unicodedata
 
 from collections import Counter
-from typing import Dict
 from typing import List
 from typing import Sequence
 from typing import Tuple

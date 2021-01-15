@@ -58,15 +58,15 @@ def main():
     model_cfg = load_cfg(exp_name=args.exp_name)
 
     # Control random seed.
-    set_seed(model_cfg['seed'])
+    set_seed(model_cfg.seed)
 
     # Load encoder tokenizer and its configuration.
-    enc_tknzr_cfg = load_cfg(exp_name=model_cfg['enc_tknzr_exp'])
-    enc_tknzr = TKNZR_OPTS[enc_tknzr_cfg['tknzr_name']].load(cfg=enc_tknzr_cfg)
+    enc_tknzr_cfg = load_cfg(exp_name=model_cfg.enc_tknzr_exp)
+    enc_tknzr = TKNZR_OPTS[enc_tknzr_cfg.tknzr_name].load(cfg=enc_tknzr_cfg)
 
     # Load decoder tokenizer and its configuration.
-    dec_tknzr_cfg = load_cfg(exp_name=model_cfg['dec_tknzr_exp'])
-    dec_tknzr = TKNZR_OPTS[dec_tknzr_cfg['tknzr_name']].load(cfg=dec_tknzr_cfg)
+    dec_tknzr_cfg = load_cfg(exp_name=model_cfg.dec_tknzr_exp)
+    dec_tknzr = TKNZR_OPTS[dec_tknzr_cfg.tknzr_name].load(cfg=dec_tknzr_cfg)
 
     # Get model running device.
     device = torch.device('cpu')
@@ -74,7 +74,7 @@ def main():
         device = torch.device('cuda')
 
     # Load model.
-    model = MODEL_OPTS[model_cfg['model_name']](
+    model = MODEL_OPTS[model_cfg.model_name](
         dec_tknzr_cfg=dec_tknzr_cfg,
         enc_tknzr_cfg=enc_tknzr_cfg,
         model_cfg=model_cfg,
@@ -93,10 +93,10 @@ def main():
     # Output inference result.
     print(infr.gen(
         batch_text=[args.src],
-        dec_max_len=model_cfg['dec_max_len'],
+        dec_max_len=model_cfg.dec_max_len,
         dec_tknzr=dec_tknzr,
         device=device,
-        enc_max_len=model_cfg['enc_max_len'],
+        enc_max_len=model_cfg.enc_max_len,
         enc_tknzr=enc_tknzr,
         model=model,
     )[0])

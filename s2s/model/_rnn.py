@@ -5,7 +5,8 @@ import torch
 
 class RNNEncModel(torch.nn.Module):
     def __init__(
-        self, enc_tknzr_cfg: argparse.Namespace,
+        self,
+        enc_tknzr_cfg: argparse.Namespace,
         model_cfg: argparse.Namespace
     ):
         super().__init__()
@@ -65,7 +66,8 @@ class RNNEncModel(torch.nn.Module):
 
 class RNNDecModel(torch.nn.Module):
     def __init__(
-        self, dec_tknzr_cfg: argparse.Namespace,
+        self,
+        dec_tknzr_cfg: argparse.Namespace,
         model_cfg: argparse.Namespace
     ):
         super().__init__()
