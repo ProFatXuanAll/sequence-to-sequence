@@ -14,7 +14,7 @@ from s2s.path import DATA_PATH
 class NewsSummaryDset(BaseDset):
     dset_name = 'news_summary'
     url = ''.join([
-        'https://github.com/nail1021734',
+        'https://github.com/ProFatXuanAll',
         '/demo-dataset/raw/main/news_summary',
     ])
 

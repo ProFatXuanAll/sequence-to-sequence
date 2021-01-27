@@ -13,7 +13,7 @@ from s2s.path import DATA_PATH
 class BaseNewsTranslateDset(BaseDset):
     dset_name = 'base_news_translate'
     url = ''.join([
-        'https://github.com/nail1021734',
+        'https://github.com/ProFatXuanAll',
         '/demo-dataset/raw/main/news_commentary-v13',
     ])
 
