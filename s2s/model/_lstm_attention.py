@@ -3,6 +3,7 @@ import torch
 
 from s2s.model._rnn_attention import AttnRNNDecModel, AttnRNNEncModel, AttnRNNModel, AttnRNNBlock
 
+
 class AttnLSTMBlock(AttnRNNBlock):
     def __init__(self, input_size, hidden_size, num_layers):
         super().__init__(input_size, hidden_size, num_layers)
@@ -61,7 +62,8 @@ class AttnLSTMBlock(AttnRNNBlock):
                 attn_enc = torch.sum(attn_enc, dim=1)
 
                 # dec_input.shape == (B, 1, H)
-                dec_input = (hid_tgt[:, i, :] + self.W(attn_enc)).unsqueeze(dim=1)
+                dec_input = (hid_tgt[:, i, :] +
+                             self.W(attn_enc)).unsqueeze(dim=1)
 
                 # Feed into RNN.
                 out, (dec_hidden, cell_state) = self.hid[RNN_index](
@@ -128,9 +130,9 @@ class AttnLSTMDecModel(AttnRNNDecModel):
         """
         # last_enc_hidden.shape == (num_layer, B, H)
         last_enc_hidden = self.enc_to_hid(enc_hid).reshape(
-                self.hid.get_num_layers(),
-                -1,
-                self.hid.get_hidden_size()
+            self.hid.get_num_layers(),
+            -1,
+            self.hid.get_hidden_size()
         )
 
         # hid_tgt.shape == (B, S-1, H)
@@ -145,6 +147,7 @@ class AttnLSTMDecModel(AttnRNNDecModel):
 
         # shape: (B, S-1, V)
         return self.hid_to_emb(dec_out) @ self.emb.weight.transpose(0, 1)
+
 
 class AttnLSTMModel(AttnRNNModel):
     model_name = 'LSTM_attention'

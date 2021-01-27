@@ -1,45 +1,57 @@
-import os
-
-from typing import Sequence
-
-import nltk
-import pandas as pd
-from sklearn.metrics import accuracy_score
-
-from s2s.dset._base import BaseDset
-from s2s.path import DATA_PATH
+from s2s.dset._base_news_commentary import BaseNewsTranslateDset
 
 
-class NewsTranslateDset(BaseDset):
-    dset_name = 'news_translate'
+class NewsTranslateDset_zh_en(BaseNewsTranslateDset):
+    dset_name = 'news_translate_zh-en'
 
     def __init__(self):
-        super().__init__()
-        with open(
-            os.path.join(DATA_PATH, 'news-commentary-v12.zh-en.en'),
-            'r',
-            encoding='utf8'
-        ) as input_src_file:
-            src = input_src_file.readlines()
-        with open(
-            os.path.join(DATA_PATH, 'news-commentary-v12.zh-en.zh'),
-            'r',
-            encoding='utf8'
-        ) as input_tgt_file:
-            tgt = input_tgt_file.readlines()
+        super().__init__('zh', 'en')
 
-        for i in range(len(src)):
-            self.src.append(self.__class__.preprocess(src[i]))
-            self.tgt.append(self.__class__.preprocess(tgt[i]))
 
-    @staticmethod
-    def batch_eval(
-            batch_tgt: Sequence[str],
-            batch_pred: Sequence[str],
-    ) -> float:
-        batch_tgt = [[k for k in i] for i in batch_tgt]
-        batch_pred = [[[k for k in i]] for i in batch_pred]
-        return nltk.translate.bleu_score.corpus_bleu(
-            batch_pred,
-            batch_tgt
-        )
+class NewsTranslateDset_en_zh(BaseNewsTranslateDset):
+    dset_name = 'news_translate_en-zh'
+
+    def __init__(self):
+        super().__init__('en', 'zh')
+
+
+class NewsTranslateDset_ru_en(BaseNewsTranslateDset):
+    dset_name = 'news_translate_ru-en'
+
+    def __init__(self):
+        super().__init__('ru', 'en')
+
+
+class NewsTranslateDset_en_ru(BaseNewsTranslateDset):
+    dset_name = 'news_translate_en-ru'
+
+    def __init__(self):
+        super().__init__('en', 'ru')
+
+
+class NewsTranslateDset_de_en(BaseNewsTranslateDset):
+    dset_name = 'news_translate_de-en'
+
+    def __init__(self):
+        super().__init__('de', 'en')
+
+
+class NewsTranslateDset_en_de(BaseNewsTranslateDset):
+    dset_name = 'news_translate_en-de'
+
+    def __init__(self):
+        super().__init__('en', 'de')
+
+
+class NewsTranslateDset_cs_en(BaseNewsTranslateDset):
+    dset_name = 'news_translate_cs-en'
+
+    def __init__(self):
+        super().__init__('cs', 'en')
+
+
+class NewsTranslateDset_en_cs(BaseNewsTranslateDset):
+    dset_name = 'news_translate_en-cs'
+
+    def __init__(self):
+        super().__init__('en', 'cs')

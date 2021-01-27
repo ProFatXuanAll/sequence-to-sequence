@@ -126,7 +126,7 @@ def main():
     dec_tknzr_cfg = load_cfg(exp_name=args.dec_tknzr_exp)
     dec_tknzr = TKNZR_OPTS[dec_tknzr_cfg.tknzr_name].load(cfg=dec_tknzr_cfg)
 
-    # Load training datset and create dataloader.
+    # Load training dataset and create dataloader.
     dset = DSET_OPTS[args.dset_name]()
     dldr = torch.utils.data.DataLoader(
         dataset=dset,

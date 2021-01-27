@@ -2,6 +2,7 @@ import argparse
 
 import torch
 
+
 class AttnRNNBlock(torch.nn.Module):
     def __init__(self, input_size, hidden_size, num_layers):
         super().__init__()
@@ -23,6 +24,7 @@ class AttnRNNBlock(torch.nn.Module):
             in_features=hidden_size,
             out_features=hidden_size
         )
+
     def get_num_layers(self):
         return self.num_layers
 
@@ -65,7 +67,8 @@ class AttnRNNBlock(torch.nn.Module):
                 attn_enc = torch.sum(attn_enc, dim=1)
 
                 # dec_input.shape == (B, 1, H)
-                dec_input = (hid_tgt[:, i, :] + self.W(attn_enc)).unsqueeze(dim=1)
+                dec_input = (hid_tgt[:, i, :] +
+                             self.W(attn_enc)).unsqueeze(dim=1)
 
                 # Feed into RNN.
                 out, dec_hidden = self.hid[RNN_index](dec_input, dec_hidden)
@@ -78,12 +81,13 @@ class AttnRNNBlock(torch.nn.Module):
             hid_tgt = dec_out
         return dec_out
 
+
 class AttnRNNEncModel(torch.nn.Module):
     def __init__(
         self,
         enc_tknzr_cfg: argparse.Namespace,
         model_cfg: argparse.Namespace
-        ):
+    ):
         super().__init__()
         self.emb = torch.nn.Embedding(
             num_embeddings=enc_tknzr_cfg.n_vocab,
@@ -233,9 +237,9 @@ class AttnRNNDecModel(torch.nn.Module):
         """
         # last_enc_hidden.shape == (num_layer, B, H)
         last_enc_hidden = self.enc_to_hid(enc_hid).reshape(
-                self.hid.get_num_layers(),
-                -1,
-                self.hid.get_hidden_size()
+            self.hid.get_num_layers(),
+            -1,
+            self.hid.get_hidden_size()
         )
 
         # hid_tgt.shape == (B, S-1, H)
@@ -250,6 +254,7 @@ class AttnRNNDecModel(torch.nn.Module):
 
         # shape: (B, S-1, V)
         return self.hid_to_emb(dec_out) @ self.emb.weight.transpose(0, 1)
+
 
 class AttnRNNModel(torch.nn.Module):
     model_name = 'RNN_attention'

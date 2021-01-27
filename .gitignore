@@ -130,9 +130,3 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-# Data
-**/data
-
-# experiment
-exp.md
