@@ -6,6 +6,8 @@ import torch
 from typing import Sequence
 from typing import Tuple
 
+import requests
+
 
 class BaseDset(torch.utils.data.Dataset):
     def __init__(self):

@@ -3,7 +3,86 @@ import argparse
 import torch
 
 
-class RNNEncModel(torch.nn.Module):
+class AttnRNNBlock(torch.nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers):
+        super().__init__()
+        self.num_layers = num_layers
+        self.hidden_size = hidden_size
+        self.input_size = input_size
+
+        self.hid = torch.nn.ModuleList(
+            [
+                torch.nn.RNN(
+                    input_size=input_size,
+                    hidden_size=hidden_size,
+                    num_layers=1,
+                    batch_first=True,
+                ) for _ in range(num_layers)
+            ]
+        )
+        self.W = torch.nn.Linear(
+            in_features=hidden_size,
+            out_features=hidden_size
+        )
+
+    def get_num_layers(self):
+        return self.num_layers
+
+    def get_hidden_size(self):
+        return self.hidden_size
+
+    def forward(self, enc_out, first_hid_tgt, last_enc_hidden):
+        r"""AttnRNNBlock forward
+
+        first_hid_tgt.shape == (B, S-1, H)
+        first_hid_tgt.dtype == torch.float
+        last_enc_hidden.shape == (num_layer, B, H)
+        last_enc_hidden.dtype == torch.float
+        enc_out.shape == (B, S, H)
+        enc_out.dtype == torch.float
+        """
+
+        hid_tgt = first_hid_tgt
+
+        for RNN_index in range(len(self.hid)):
+            # Initialize RNN hidden state.
+            # dec_hidden.shape == (1, B, H)
+            dec_hidden = last_enc_hidden[RNN_index].unsqueeze(dim=0)
+
+            # To keep RNN output for each time step.
+            dec_out = None
+
+            for i in range(hid_tgt.size(-2)):
+                # Calculate attention weight.
+                # score.shape == (B, 1, S)
+                score = dec_hidden.transpose(0, 1) @ enc_out.transpose(-1, -2)
+                score = torch.nn.functional.softmax(score, dim=-1)
+
+                # Encoder output multiply their weight.
+                # attn_enc.shape == (B, S, H)
+                attn_enc = enc_out * score.transpose(-1, -2)
+
+                # Sum each time step Encoder output.
+                # attn_enc.shape == (B, H)
+                attn_enc = torch.sum(attn_enc, dim=1)
+
+                # dec_input.shape == (B, 1, H)
+                dec_input = (hid_tgt[:, i, :] +
+                             self.W(attn_enc)).unsqueeze(dim=1)
+
+                # Feed into RNN.
+                out, dec_hidden = self.hid[RNN_index](dec_input, dec_hidden)
+
+                if dec_out == None:
+                    dec_out = out
+                else:
+                    dec_out = torch.cat((dec_out, out), dim=1)
+
+            hid_tgt = dec_out
+        return dec_out
+
+
+class AttnRNNEncModel(torch.nn.Module):
     def __init__(
         self,
         enc_tknzr_cfg: argparse.Namespace,
@@ -61,10 +140,10 @@ class RNNEncModel(torch.nn.Module):
         out, _ = self.hid(self.emb_to_hid(self.emb(src)))
 
         # shape: (B, H * (is_bidir + 1))
-        return out[torch.arange(out.size(0)).to(out.device), src_len - 1]
+        return out[torch.arange(out.size(0)).to(out.device), src_len - 1], out
 
 
-class RNNDecModel(torch.nn.Module):
+class AttnRNNDecModel(torch.nn.Module):
     def __init__(
         self,
         dec_tknzr_cfg: argparse.Namespace,
@@ -118,12 +197,10 @@ class RNNDecModel(torch.nn.Module):
                 p=model_cfg.dec_dropout,
             ),
         )
-        self.hid = torch.nn.RNN(
+        self.hid = AttnRNNBlock(
             input_size=model_cfg.dec_d_hid,
             hidden_size=model_cfg.dec_d_hid,
-            num_layers=model_cfg.dec_n_layer,
-            batch_first=True,
-            dropout=model_cfg.dec_dropout * min(1, model_cfg.dec_n_layer - 1),
+            num_layers=model_cfg.dec_n_layer
         )
         self.hid_to_emb = torch.nn.Sequential(
             torch.nn.Dropout(
@@ -146,31 +223,41 @@ class RNNDecModel(torch.nn.Module):
     def forward(
             self,
             enc_hid: torch.Tensor,
+            enc_out: torch.Tensor,
             tgt: torch.Tensor,
     ) -> torch.Tensor:
         r"""Decoder forward.
 
         enc_hid.shape == (B, H)
         enc_hid.dtype == torch.float
+        enc_out.shape == (B, S, H)
+        enc_out.dtype == torch.float
         tgt.shape == (B, S)
         tgt.dtype == torch.int
         """
-        # shape: (B, S, H)
-        out, _ = self.hid(
-            self.emb_to_hid(self.emb(tgt)),
-            self.enc_to_hid(enc_hid).reshape(
-                self.hid.num_layers,
-                -1,
-                self.hid.hidden_size
-            ),
+        # last_enc_hidden.shape == (num_layer, B, H)
+        last_enc_hidden = self.enc_to_hid(enc_hid).reshape(
+            self.hid.get_num_layers(),
+            -1,
+            self.hid.get_hidden_size()
         )
 
-        # shape: (B, S, V)
-        return self.hid_to_emb(out) @ self.emb.weight.transpose(0, 1)
+        # hid_tgt.shape == (B, S-1, H)
+        hid_tgt = self.emb_to_hid(self.emb(tgt))
+
+        # dec_out.shape == (B, S-1, H)
+        dec_out = self.hid(
+            enc_out=enc_out,
+            first_hid_tgt=hid_tgt,
+            last_enc_hidden=last_enc_hidden
+        )
+
+        # shape: (B, S-1, V)
+        return self.hid_to_emb(dec_out) @ self.emb.weight.transpose(0, 1)
 
 
-class RNNModel(torch.nn.Module):
-    model_name = 'RNN'
+class AttnRNNModel(torch.nn.Module):
+    model_name = 'RNN_attention'
 
     def __init__(
             self,
@@ -179,11 +266,11 @@ class RNNModel(torch.nn.Module):
             model_cfg: argparse.Namespace,
     ):
         super().__init__()
-        self.enc = RNNEncModel(
+        self.enc = AttnRNNEncModel(
             enc_tknzr_cfg=enc_tknzr_cfg,
             model_cfg=model_cfg,
         )
-        self.dec = RNNDecModel(
+        self.dec = AttnRNNDecModel(
             dec_tknzr_cfg=dec_tknzr_cfg,
             model_cfg=model_cfg,
         )
@@ -196,7 +283,8 @@ class RNNModel(torch.nn.Module):
             **kwargs,
     ) -> torch.Tensor:
         # shape: (B, S, V)
-        return self.dec(self.enc(src=src, src_len=src_len), tgt=tgt)
+        enc_hid, enc_out = self.enc(src=src, src_len=src_len)
+        return self.dec(enc_hid, enc_out, tgt=tgt)
 
     @classmethod
     def update_subparser(cls, subparser: argparse.ArgumentParser):
