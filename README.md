@@ -59,7 +59,7 @@ GRU \
 --enc_max_len 12 \
 --enc_tknzr_exp 'src_tknzr' \
 --epoch 100 \
---exp_name 'gru' \
+--exp_name 'my_exp' \
 --log_step 2500 \
 --lr 5e-4 \
 --max_norm 1.0 \
@@ -73,7 +73,7 @@ python run_eval_model.py \
   --batch_size 1024 \
   --ckpt -1 \
   --dset_name 'arithmetic' \
-  --exp_name 'test' \
+  --exp_name 'my_exp' \
   --infr_name 'top_1'
 ```
 
@@ -82,7 +82,7 @@ python run_eval_model.py \
 ```sh
 python run_infr_model.py \
   --ckpt -1 \
-  --exp_name 'test' \
+  --exp_name 'my_exp' \
   --infr_name 'top_1' \
   --src '1+1='
 ```
